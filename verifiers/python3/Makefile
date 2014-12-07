@@ -18,7 +18,7 @@ run-image:
 	${docker} run -ti --rm -v ${cwd}:/app ${repo-name}
 
 run-example:
-	${docker} run -ti --rm ${repo-name} -e --tests="Pj4+IGZvbwox" "Zm9vPTE="	
+	${docker} run --rm ${repo-name} -e --tests="Pj4+IGZvbwox" "Zm9vPTE="	
 
 test:
 	${docker} run -ti --rm -v ${cwd}:/app ${repo-name} python3 -m unittest discover -s codeverifier/
