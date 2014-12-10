@@ -29,10 +29,13 @@ docker run --ti verifer-image [-e] [--tests TESTS] solution
 
 ### The web server
 
-TODO:
-- write a server accepting requests to `POST /<run-time-name>`
-  with a json formatted payload like 
-  `{"solution": "<solution-code>", "tests": "<tests-code>"}`.
+The webserver he's currently written in Go. 
+
+Working wth docker and REST remote API is easy with either Python, Node or Go.
+But with the I/O work involved, Nodejs and Go are better candidate. I picked 
+Go to speed up deployment.
+
+It's currently ready for testing. See its `server/README.md`.
 
 
 ### GAE manager app
@@ -40,9 +43,9 @@ TODO:
 Always on. Start and stop a cluster.
 
 TODO:
-- Serves cluster status of the cluster (its load balancer IP and running status)
+- [ ] Serves cluster status of the cluster (its load balancer IP and running status)
   those request can used to keep the cluster up.
-- Should start a cluster of code verifier cluster 
+- [ ] Should start a cluster of code verifier cluster 
   when it receives a status request and the cluster is not running.
-- Should stop the cluster 
+- [ ] Should stop the cluster 
   when no cluster status request have been received recently.

@@ -53,10 +53,11 @@ import (
 )
 
 const (
-	root           = "/"
-	defaultAddr    = ":5000"
-	defaultMaxJobs = 5
-	jsonError      = `{"errors": "unexpected error"}`
+	root              = "/"
+	defaultAddr       = ":5000"
+	defaultDockerHost = "unix:///var/run/docker.sock"
+	defaultMaxJobs    = 5
+	jsonError         = `{"errors": "unexpected error"}`
 )
 
 var (
@@ -71,15 +72,19 @@ var (
 
 func init() {
 	var (
-		defaultDockerHost     = os.Getenv("DOCKER_HOST")
-		defaultDockerCertPath = os.Getenv("DOCKER_CERT_PATH")
+		flagDefaultDockerHost     = os.Getenv("DOCKER_HOST")
+		flagDefaultDockerCertPath = os.Getenv("DOCKER_CERT_PATH")
 	)
+
+	if flagDefaultDockerHost == "" {
+		flagDefaultDockerHost = defaultDockerHost
+	}
 
 	flag.BoolVar(&showHelp, "help", false, "Show help")
 	flag.IntVar(&maxJobs, "max-job", defaultMaxJobs, "maximun number of concurrent job running")
 	flag.StringVar(&addr, "http", defaultAddr, "Address to bind the server to.")
-	flag.StringVar(&dockerHost, "docker-host", defaultDockerHost, "URI of the Docker remote API")
-	flag.StringVar(&dockerCertPath, "docker-cert-dir", defaultDockerCertPath, "Path to the X509 Key Pair to authenticate with the Docker remote API")
+	flag.StringVar(&dockerHost, "docker-host", flagDefaultDockerHost, "URI of the Docker remote API")
+	flag.StringVar(&dockerCertPath, "docker-cert-dir", flagDefaultDockerCertPath, "Path to the X509 Key Pair to authenticate with the Docker remote API")
 }
 
 type processError struct {

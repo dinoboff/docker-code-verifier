@@ -2,6 +2,14 @@
 
 Run user submitted code in container and return the result.
 
+TODO:
+
+- [ ] Better documentation (including development nitrous).
+- [ ] More request type supported. Only support POST Ajax request. It support CORS,
+  and the can be send from any domain. The server should support GET 
+  and JSONP request.
+- [ ] Proper deployment process.
+
 
 ## Go environment
 
@@ -19,8 +27,8 @@ To install the Docker Go environment:
 - optional, pull the Golang image in advance: `docker pull golang:1.3.3-cross`.
 
 
-Note that the cross compile [Go docker image](https://registry.hub.docker.com/_/golang/) 
-is rather large (1.4 Go). Pulling it the first starting a Go container might 
+Note that the [cross compiler Go docker image](https://registry.hub.docker.com/_/golang/) 
+is rather large (1.4 Go). Pulling it the first time starting a Go container might 
 take some time, but running the tests and compile is a rather fast.
 
 
@@ -98,12 +106,73 @@ go test ./...
 
 ## Deployment 
 
+```
+cd docker-code-verifier/server
+make deploy
+```
+
+It will:
+- test and compile the server executable
+- uploaded it to Google Cloud storage
+- start a container (using `docker-code-verifier/scripts/deploy.sh`).
+- the startup script (`/server/bin/startup.sh`) will pull the verifier images,
+  download the server executable and run it (it will be bound to port 80).
+
+You can check if the setup is ready by connecting to the server and 
+follow the startup logs (change):
+```
+gcloud compute --project "singpath-hd" ssh --zone "us-central1-b" "test-verifier"
+tail -f /var/log/startupscript.log 
+```
+
+Once you see something like:
+
+	Dec 10 00:57:26 test-verifier startupscript: 2014/12/10 00:57:26 Starting server...
+	Dec 10 00:57:26 test-verifier startupscript: 2014/12/10 00:57:26 Docker address: unix:///var/run/docker.sock
+	Dec 10 00:57:26 test-verifier startupscript: 2014/12/10 00:57:26 Docker cert. path: 
+	Dec 10 00:57:26 test-verifier startupscript: 2014/12/10 00:57:26 Binding server to: 0.0.0.0:80
+
+
+... The server is ready.
+
+To test, use the REST client like Postman and try:
+
+	POST /python HTTP/1.1
+	Host: 146.148.37.137
+	Cache-Control: no-cache
+
+	{ "solution": "foo=2\nprint(foo)", "tests": ">>> foo\n2" }
+
+
+The respond should be:
+
+	{
+	    "Solved": true,
+	    "Printed": "2\n",
+	    "Errors": "",
+	    "Results": [
+	        {
+	            "Call": "foo",
+	            "Expected": "2",
+	            "Received": "2",
+	            "Correct": true
+	        }
+	    ]
+	}
+
+The response should be around 400-500 ms .
+
+
+Note: the current deployment is only suitable for testing. it will need something
+to monitor the process and restarted it if needed.
+
 TODO:
-- post the go server binary somewhere
-- start a cluster.
-- each node, based of GCE docker VM, should download the server, start it and
- pull the verifier images.
 
-To speed up the creation process of a node we could host the verifier image 
-on Google Cloud Storage instead of Docker Hub Registry.
-
+- [ ] e2e tests.
+- [ ] load testing and tuning concurrent request (set to 5 right now)
+- [ ] Proper installation of the server with something like supervisor
+  monitoring the process.
+- [ ] Create instance template, instance group manager and 
+  load balancer for the verifier.
+- [ ] Manage startup and shutdown of the cluster via a Google App Engine
+  monitor app.
