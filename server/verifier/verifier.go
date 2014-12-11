@@ -286,7 +286,7 @@ func (v *Container) GetResults() (*Response, error) {
 	}
 	defer logReader.Close()
 
-	logStreams, err := NewStreams(logReader)
+	logStreams, err := NewLogStreams(logReader)
 	if err != nil {
 		return nil, err
 	}
@@ -361,5 +361,5 @@ func NewLogStreams(logs io.Reader) (*LogStreams, error) {
 		return nil, err
 	}
 
-	return &Streams{sdtout, sdterr}, nil
+	return &LogStreams{sdtout, sdterr}, nil
 }
