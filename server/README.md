@@ -2,15 +2,6 @@
 
 Run user submitted code in container and return the result.
 
-TODO:
-
-- [ ] Better documentation (including development nitrous).
-- [ ] More request type supported. Only support POST Ajax request. It support CORS,
-  and the can be send from any domain. The server should support GET 
-  and JSONP request.
-- [ ] Proper deployment process.
-
-
 ## 1. Go environment
 
 ### Local environment
@@ -170,6 +161,10 @@ The response should be around 400-500 ms .
 
 ## 5. TODO:
 
+- [ ] Better documentation (including development nitrous).
+- [ ] More request type supported. Only support POST Ajax request. It support CORS,
+  and the can be send from any domain. The server should support GET 
+  and JSONP request.
 - [ ] e2e tests.
 - [ ] load testing and tuning concurrent request (set to 5 right now)
 - [ ] Proper installation of the server with something like supervisor
