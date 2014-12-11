@@ -8,8 +8,10 @@ package verifier
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/samalba/dockerclient"
 	"io"
 	"io/ioutil"
@@ -41,6 +43,7 @@ var (
 const (
 	containerAlreadyStopped = 304
 	openBracket             = 123
+	logHeaderSize           = 8
 )
 
 //Default timeout func.
@@ -273,17 +276,7 @@ func (v *Container) Stop(timeout int) error {
 	return v.Docker.StopContainer(v.containerID, timeout)
 }
 
-func filterResponse(resp io.Reader) io.Reader {
-	for {
-		b := make([]byte, 1)
-		_, err := resp.Read(b)
-		if err != nil || b[0] == openBracket {
-			break
-		}
-	}
-	return io.MultiReader(bytes.NewReader([]byte(`{`)), resp)
-}
-
+// Query the the stdout logs of the container an parse the first line.
 func (v *Container) GetResults() (*Response, error) {
 	var resp Response
 
@@ -293,10 +286,14 @@ func (v *Container) GetResults() (*Response, error) {
 	}
 	defer logReader.Close()
 
-	filteredLog := filterResponse(logReader)
-	body, err := ioutil.ReadAll(filteredLog)
+	logStreams, err := NewStreams(logReader)
 	if err != nil {
-		return &resp, err
+		return nil, err
+	}
+
+	body, err := ioutil.ReadAll(logStreams.Stdout)
+	if err != nil {
+		return nil, err
 	}
 
 	err = json.Unmarshal(body, &resp)
@@ -305,4 +302,64 @@ func (v *Container) GetResults() (*Response, error) {
 
 func (v *Container) Remove() error {
 	return v.Docker.RemoveContainer(v.containerID, true)
+}
+
+type LogStreams struct {
+	Stdout io.Reader
+	Stderr io.Reader
+}
+
+// Parse container logs
+// See https://docs.docker.com/reference/api/docker_remote_api_v1.15/#attach-to-a-container
+func NewLogStreams(logs io.Reader) (*LogStreams, error) {
+	var (
+		sdtout = bytes.NewBuffer(nil)
+		sdterr = bytes.NewBuffer(nil)
+
+		target *bytes.Buffer
+		header = make([]byte, logHeaderSize)
+		frame  []byte
+		size   uint32
+		err    error
+		i      int
+	)
+
+	for {
+		i, err = logs.Read(header)
+		if err != nil {
+			break
+		}
+		if i != logHeaderSize {
+			err = fmt.Errorf("wrong size header %v (%d)", header, i)
+			break
+		}
+
+		switch header[0] {
+		case 0, 1:
+			target = sdtout
+		case 2:
+			target = sdterr
+		default:
+			err = fmt.Errorf("wrong stream type: %v", header[0])
+			break
+		}
+
+		size = binary.BigEndian.Uint32(header[4:])
+		frame = make([]byte, size)
+		_, err = logs.Read(frame)
+		if err != nil {
+			break
+		}
+
+		_, err = target.Write(frame)
+		if err != nil {
+			break
+		}
+	}
+
+	if err != nil && err != io.EOF {
+		return nil, err
+	}
+
+	return &Streams{sdtout, sdterr}, nil
 }

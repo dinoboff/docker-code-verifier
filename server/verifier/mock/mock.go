@@ -6,6 +6,7 @@ package mock
 
 import (
 	"bytes"
+	"encoding/binary"
 	"github.com/samalba/dockerclient"
 	"io"
 	"sync"
@@ -30,8 +31,13 @@ type Response struct {
 	io.Reader
 }
 
-func NewResponse(jsonResp []byte) *Response {
-	return &Response{bytes.NewBuffer(jsonResp)}
+// See https://docs.docker.com/reference/api/docker_remote_api_v1.15/#attach-to-a-container
+func NewResponse(stdout []byte) *Response {
+	header := []byte{1, 0, 0, 0}
+	size := make([]byte, 4)
+	binary.BigEndian.PutUint32(size, uint32(len(stdout)))
+	header = append(header, size...)
+	return &Response{bytes.NewBuffer(append(header, stdout...))}
 }
 
 func (r *Response) Close() error {

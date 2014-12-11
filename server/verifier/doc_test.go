@@ -29,6 +29,6 @@ func Example() {
 		log.Fatalf("Failed to run a verifier container: %s", err)
 	}
 
-	log.Println("Test solved?: %s", resp.Solved)
-	log.Println("%+u", resp)
+	log.Printf("Test solved?: %t", resp.Solved)
+	log.Printf("%+v", resp)
 }
