@@ -8,8 +8,8 @@ This is the docker based code verifier to verify SingPath problem.
 
 ### Code verifier
 
-The verifiers are simple docker images withe a common entry point behaviour. 
-The entry point should process a payload and return JSON formatted results.
+The verifiers are simple docker images with a common entry point behaviour. 
+An entry point should process a payload and return JSON formatted results.
 
 The entry point signature is:
 
@@ -29,13 +29,13 @@ docker run --ti verifer-image [-e] [--tests TESTS] solution
 
 ### The web server
 
-The webserver he's currently written in Go. 
+The webserver is currently written in Go. 
 
-Working wth docker and REST remote API is easy with either Python, Node or Go.
-But with the I/O work involved, Nodejs and Go are better candidate. I picked 
+Working wth Docker and its REST remote API is easy with either Python, Node or Go.
+But with the I/O work involved, Nodejs and Go are better candidates. I picked 
 Go to speed up deployment.
 
-It's currently ready for testing. See its `server/README.md`.
+It's currently ready for testing. See `server/README.md`.
 
 
 ### GAE manager app
@@ -48,4 +48,4 @@ TODO:
 - [ ] Should start a cluster of code verifier cluster 
   when it receives a status request and the cluster is not running.
 - [ ] Should stop the cluster 
-  when no cluster status request have been received recently.
+  when no cluster status request has been received recently.

@@ -2,42 +2,12 @@
 
 Run user submitted code in container and return the result.
 
-TODO:
+## 1. Go environment
 
-- [ ] Better documentation (including development nitrous).
-- [ ] More request type supported. Only support POST Ajax request. It support CORS,
-  and the can be send from any domain. The server should support GET 
-  and JSONP request.
-- [ ] Proper deployment process.
+### Local environment
 
-
-## Go environment
-
-### On Docker
-
-Cross compilation and test are run in a docker container. Although, using a local
-Go install might be more easier (to use go tools like coverage) or necessary for some tasks
-(updating dependencies), you can test and compile the server in docker 
-while editing the source locally.
-
-To install the Docker Go environment:
-
-- [install docker](https://docs.docker.com/installation/) (or boot2docker on win/osx).
-- git clone git@github.com:ChrisBoesch/docker-code-verifier.git.
-- optional, pull the Golang image in advance: `docker pull golang:1.3.3-cross`.
-
-
-Note that the [cross compiler Go docker image](https://registry.hub.docker.com/_/golang/) 
-is rather large (1.4 Go). Pulling it the first time starting a Go container might 
-take some time, but running the tests and compile is a rather fast.
-
-
-## Nitrous environment
-
-TODO.
-
-
-## Local environment
+	Note: you can skip this step if you don't need to manage dependencies.
+	Using Docker, will allow you to edit, test and build the server.
 
 - [install Go](http://golang.org/doc/install) (installed on OS X).
 - [install mercurial](http://mercurial.selenic.com/downloads).
@@ -61,9 +31,32 @@ cd docker-code-verifier/server
 godep restore ./...
 ```
 
-Note you should still create a docker go environment for cross compiling
+	Note you should still create a docker go environment for cross compiling
 
-## Compile
+### On Docker
+
+Cross compilation and test are run in a docker container. Although, using a local
+Go install might be easier (to use go tools like coverage) or necessary for some tasks
+(updating dependencies), you can test and compile the server in docker 
+while editing the source locally.
+
+To install the Docker Go environment:
+
+- [install docker](https://docs.docker.com/installation/) (or boot2docker on win/osx).
+- `git clone git@github.com:ChrisBoesch/docker-code-verifier.git`.
+- optional, pull the Golang image in advance: `docker pull golang:1.3.3-cross`.
+
+
+	Note: that the [cross compiler Go docker image](https://registry.hub.docker.com/_/golang/) 
+	is rather large (1.4 Go). Pulling it the first time starting a Go container might 
+	take some time, but running the tests and compile is a rather fast.
+
+
+## Nitrous environment
+
+TODO.
+
+## 2. Compilation
 
 We will build binary for windows (386/amd64), linux (amd64) and osx (amd64).
 
@@ -90,7 +83,7 @@ drwxr-xr-x  10 damien  staff   340B  8 Dec 18:21 ../
 `bin/server-linux-amd64` is the executable we will deploy to the server. The other 
 ones are meant for local testing.
 
-## Testing
+## 3. Testing
 
 You can test the libraries in the container:
 ```
@@ -104,7 +97,7 @@ cd docker-code-verifier/server
 go test ./...
 ```
 
-## Deployment 
+## 4. Deployment 
 
 ```
 cd docker-code-verifier/server
@@ -163,11 +156,15 @@ The respond should be:
 The response should be around 400-500 ms .
 
 
-Note: the current deployment is only suitable for testing. it will need something
-to monitor the process and restarted it if needed.
+	Note: the current deployment is only suitable for testing. it will need something
+	to monitor the process and restarted it if needed.
 
-TODO:
+## 5. TODO:
 
+- [ ] Better documentation (including development nitrous).
+- [ ] More request type supported. Only support POST Ajax request. It support CORS,
+  and the can be send from any domain. The server should support GET 
+  and JSONP request.
 - [ ] e2e tests.
 - [ ] load testing and tuning concurrent request (set to 5 right now)
 - [ ] Proper installation of the server with something like supervisor
