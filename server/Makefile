@@ -7,10 +7,30 @@ gosrc = $(shell find . -name "*.go" | sed 's/ /\\ /g')
 target ?= bin/server-osx-amd64
 version ?= dev
 
+dist-name = verifier-server
+dist-zip = ${dist-name}.zip
+dist-path = dist/${dist-zip}
+
+vm-image="container-vm-v20141208"
+vm-image-project="google-containers"
+vm-machine-type="f1-micro"
+vm-zone="us-central1-a"
+
 docker ?= docker
 
-build: images test bin/server-windows-386.exe bin/server-windows-amd64.exe bin/server-linux-amd64 bin/server-linux-amd64 bin/server-osx-amd64
-dev:images test ${target}
+build: images test bin/server-linux-amd64
+	rm -rf build
+	mkdir -p build
+	cp bin/{server-linux-amd64,init.sh,Makefile} build/
+
+dist: build
+	rm -rf dist
+	mkdir -p dist/${dist-name}
+	cp build/* dist/${dist-name}
+	cd dist; zip ./${dist-zip} ${dist-name}/*
+	rm -rf dist/${dist-name}
+
+dev: images test ${target}
 	echo "starting server..."
 	${target}
 
@@ -52,9 +72,14 @@ bin/server-osx-amd64: ${gosrc}
 test:
 	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} ${repo-name} go test ${package-name}/...
 
-upload: build bin/server-linux-amd64
-	gsutil cp bin/server-linux-amd64 gs://verifier/server-${version}
+upload: dist
+	gsutil cp ${dist-path} gs://verifier/server-${version}
 	gsutil acl set public-read gs://verifier/server-${version}
 
-deploy-test: upload
-	cd ../; VERSION=${version} bash scripts/deploy.sh
+deploy-test:
+	gcloud compute instances create test-verifier-instance \
+		--image ${vm-image} \
+		--image-project ${vm-image-project} \
+		--machine-type ${vm-machine-type} \
+		--zone ${vm-zone} \
+		--tags http-server
