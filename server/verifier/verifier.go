@@ -297,6 +297,10 @@ func (v *Container) GetResults() (*Response, error) {
 	}
 
 	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse response (%s): %s", body, err)
+	}
+
 	return &resp, err
 }
 
@@ -346,8 +350,12 @@ func NewLogStreams(logs io.Reader) (*LogStreams, error) {
 
 		size = binary.BigEndian.Uint32(header[4:])
 		frame = make([]byte, size)
-		_, err = logs.Read(frame)
-		if err != nil {
+		i, err = logs.Read(frame)
+		if err != nil && err != io.EOF {
+			break
+		}
+		if uint32(i) < size {
+			err = fmt.Errorf("frame too short %s (%d)", frame, i)
 			break
 		}
 
