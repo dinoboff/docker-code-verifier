@@ -105,6 +105,10 @@ func (p *processError) toJson() []byte {
 	return j
 }
 
+type Index struct {
+	Runtimes []string
+}
+
 type Server struct {
 	Docker  dockerclient.Client
 	Watcher verifier.StopWatcher
@@ -139,10 +143,18 @@ func (s *Server) logAccess(req *http.Request) {
 	log.Printf("%s %s %s", req.RemoteAddr, req.Method, req.URL)
 }
 
-func (s *Server) proccessRequest(req *http.Request) (*verifier.Response, *processError) {
+func (s *Server) getIndex() *Index {
+	return &Index{verifier.SupportedtRuntimeList()}
+}
+
+func (s *Server) proccessRequest(req *http.Request) (interface{}, *processError) {
 	var (
 		runtimeName = req.URL.Path[len(root):]
 	)
+
+	if runtimeName == "" {
+		return s.getIndex(), nil
+	}
 
 	err := verifier.SupportedRuntime(runtimeName)
 	if err != nil {

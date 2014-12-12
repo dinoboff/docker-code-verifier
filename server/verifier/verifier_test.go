@@ -6,6 +6,7 @@ import (
 	"github.com/samalba/dockerclient"
 	"github.com/stretchr/testify/assert"
 	tmock "github.com/stretchr/testify/mock"
+	"sort"
 	"testing"
 	"time"
 )
@@ -190,4 +191,11 @@ func TestGetResult(t *testing.T) {
 		},
 		resp,
 	)
+}
+
+func TestSupportedRuntimeList(t *testing.T) {
+	names := SupportedtRuntimeList()
+	sort.Strings(names)
+	assert.Len(t, runtimes, 2)
+	assert.Equal(t, []string{"python", "python3"}, names)
 }

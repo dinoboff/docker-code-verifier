@@ -5,6 +5,7 @@ repo-name ?= singpath/verifier-server
 tag ?= v0.1
 gosrc = $(shell find . -name "*.go" | sed 's/ /\\ /g')
 target ?= bin/server-osx-amd64
+version ?= dev
 
 docker ?= docker
 
@@ -52,8 +53,8 @@ test:
 	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} ${repo-name} go test ${package-name}/...
 
 upload: build bin/server-linux-amd64
-	gsutil cp bin/server-linux-amd64 gs://verifier/server
-	gsutil acl set public-read gs://verifier/server
+	gsutil cp bin/server-linux-amd64 gs://verifier/server-${version}
+	gsutil acl set public-read gs://verifier/server-${version}
 
 deploy-test: upload
-	cd ../; STARTUP_SCRIPT="${cwd}/bin/startup.sh" bash scripts/deploy.sh
+	cd ../; VERSION=${version} bash scripts/deploy.sh

@@ -70,6 +70,14 @@ func SupportedRuntime(name string) error {
 	return ErrNotImplemented
 }
 
+func SupportedtRuntimeList() []string {
+	result := make([]string, 0, len(runtimes))
+	for key := range runtimes {
+		result = append(result, key)
+	}
+	return result
+}
+
 func Run(client dockerclient.Client, watcher StopWatcher, req *Request, debug bool) (*Response, error) {
 	container, err := NewContainer(client, req)
 	if err != nil {

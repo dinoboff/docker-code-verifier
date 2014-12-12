@@ -169,7 +169,7 @@ The response should be around 400-500 ms .
 - [ ] load testing and tuning concurrent request (set to 5 right now)
 - [ ] Proper installation of the server with something like supervisor
   monitoring the process.
-- [ ] Create instance template, instance group manager and 
+- [x] Create instance template, instance group manager and 
   load balancer for the verifier.
 - [ ] Manage startup and shutdown of the cluster via a Google App Engine
   monitor app.
