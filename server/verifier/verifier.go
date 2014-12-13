@@ -126,6 +126,14 @@ func NewRequest(runtimeName string, body []byte) (*Request, error) {
 
 	req.Runtime = runtimeName
 	err := json.Unmarshal(body, &req)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Solution == "" {
+		return nil, ErrSolutionIsMissing
+	}
+
 	return &req, err
 }
 
