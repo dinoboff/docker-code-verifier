@@ -56,7 +56,9 @@ To install the Docker Go environment:
 
 TODO.
 
-## 2. Compilation
+
+
+## 3. Compilation
 
 We will build binary for windows (386/amd64), linux (amd64) and osx (amd64).
 
@@ -83,6 +85,7 @@ drwxr-xr-x  10 damien  staff   340B  8 Dec 18:21 ../
 `bin/server-linux-amd64` is the executable we will deploy to the server. The other 
 ones are meant for local testing.
 
+
 ## 3. Testing
 
 You can test the libraries in the container:
@@ -97,17 +100,37 @@ cd docker-code-verifier/server
 go test ./...
 ```
 
-## 4. Deployment 
+
+## 4. Compile
+
+Using docker, compile and launch the server:
+```
+make dev target=bin/server-window-386.exe
+```
+
+Where target can be either `bin/server-windows-386.exe`, `bin/server-windows-amd64.exe`, 
+`bin/server-linux-amd64` or `bin/server-osx-amd64`. By default, it will use `bin/server-osx-amd64`.
+
+Locally, use:
+```
+go install
+$GOPATH/bin/server
+```
+
+
+## 5. Deployment test
+
+It will only create one instance to test the server on GCE and test the stater script.
 
 ```
 cd docker-code-verifier/server
-make deploy
+make test-deploy
 ```
 
 It will:
 - test and compile the server executable
-- uploaded it to Google Cloud storage
-- start a container (using `docker-code-verifier/scripts/deploy.sh`).
+- upload it to Google Cloud storage
+- start a container.
 - the startup script (`/server/bin/startup.sh`) will pull the verifier images,
   download the server executable and run it (it will be bound to port 80).
 
@@ -131,43 +154,63 @@ Once you see something like:
 To test, use the REST client like Postman and try:
 
 	POST /python HTTP/1.1
-	Host: 146.148.37.137
+	Host: localhost:5000
+	Content-Type: application/json
 	Cache-Control: no-cache
 
-	{ "solution": "foo=2\nprint(foo)", "tests": ">>> foo\n2" }
+	{"solution": "foo=1\nprint(foo)", "tests": ">>> foo\n1"}
 
 
-The respond should be:
+The response should be:
 
 	{
 	    "Solved": true,
-	    "Printed": "2\n",
+	    "Printed": "1\n",
 	    "Errors": "",
 	    "Results": [
 	        {
 	            "Call": "foo",
-	            "Expected": "2",
-	            "Received": "2",
+	            "Expected": "1",
+	            "Received": "1",
 	            "Correct": true
 	        }
 	    ]
 	}
 
-The response should be around 400-500 ms .
+The response time should be around 400-500 ms .
 
 
 	Note: the current deployment is only suitable for testing. it will need something
 	to monitor the process and restarted it if needed.
 
-## 5. TODO:
+
+If you need to upload a fix to the current version 
+(the version is set in `/server/server.go` line 25):
+```
+make upload
+```
+
+The next time an instance reboot, it will download the updated server
+and install it (assuming it is set to install the current version).
+
+To know which version instance are set to download and install, check
+the cluster-version metadata:
+```
+gcloud compute instances describe instance-name --zone instance-zone
+```
+
+The metadata item key is "cluster-version".
+
+
+## 6. TODO:
 
 - [ ] Better documentation (including development nitrous).
-- [ ] More request type supported. Only support POST Ajax request. It support CORS,
+- [x] More request type supported. Only support POST Ajax request. It support CORS,
   and the can be send from any domain. The server should support GET 
   and JSONP request.
 - [ ] e2e tests.
 - [ ] load testing and tuning concurrent request (set to 5 right now)
-- [ ] Proper installation of the server with something like supervisor
+- [x] Proper installation of the server with something like supervisor
   monitoring the process.
 - [x] Create instance template, instance group manager and 
   load balancer for the verifier.

@@ -7,14 +7,14 @@ ARCHIVE=server.zip
 SRC=./verifier-server
 
 if [[ -z "$CLUSTER_VERSION" ]]; then
-	CLUSTER_VERSION=$(curl "http://metadata/computeMetadata/v1/instance/attributes/cluster-version" -H "Metadata-Flavor: Google")
+    CLUSTER_VERSION=$(curl "http://metadata/computeMetadata/v1/instance/attributes/cluster-version" -H "Metadata-Flavor: Google")
 fi
 
 if [[ -z "$CLUSTER_VERSION" ]]; then
-	echo "Cluster version is missing. Using 'latest' as default"
-	CLUSTER_VERSION="dev"
+    echo "Cluster version is missing. Using 'latest' as default"
+    CLUSTER_VERSION="dev"
 else
-	echo "Cluster version: $CLUSTER_VERSION"
+    echo "Cluster version: $CLUSTER_VERSION"
 fi
 
 # Istall dependencies
@@ -35,11 +35,11 @@ wget "http://storage.googleapis.com/verifier/server-${CLUSTER_VERSION}" -O "$ARC
 
 # start current daemon incase the instance has been rebooted
 if [[ -f "$INIT" ]]; then
-	sudo "$INIT" stop
+    sudo "$INIT" stop
 fi
 
 if [[ -f "${SRC}/Makefile" ]]; then
-	cd "$SRC"; sudo make clean; cd -
+    cd "$SRC"; sudo make clean; cd -
 fi
 
 # install new version

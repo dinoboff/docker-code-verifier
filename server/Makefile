@@ -5,7 +5,6 @@ repo-name ?= singpath/verifier-server
 tag ?= v0.1
 gosrc = $(shell find . -name "*.go" | sed 's/ /\\ /g')
 target ?= bin/server-osx-amd64
-version ?= dev
 
 dist-name = verifier-server
 dist-zip = ${dist-name}.zip
@@ -18,7 +17,7 @@ vm-zone="us-central1-a"
 
 docker ?= docker
 
-build: images test bin/server-linux-amd64
+build: images test bin/server-linux-amd64 ${target}
 	rm -rf build
 	mkdir -p build
 	cp bin/{server-linux-amd64,init.sh,Makefile} build/
@@ -72,14 +71,19 @@ bin/server-osx-amd64: ${gosrc}
 test:
 	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} ${repo-name} go test ${package-name}/...
 
-upload: dist
-	gsutil cp ${dist-path} gs://verifier/server-${version}
-	gsutil acl set public-read gs://verifier/server-${version}
+upload: dist set-version
+	gsutil cp ${dist-path} gs://verifier/server-v${version}
+	gsutil acl set public-read gs://verifier/server-v${version}
 
-deploy-test:
+test-deploy: upload
 	gcloud compute instances create test-verifier-instance \
 		--image ${vm-image} \
 		--image-project ${vm-image-project} \
 		--machine-type ${vm-machine-type} \
 		--zone ${vm-zone} \
+        --metadata-from-file startup-script="${cwd}/bin/startup.sh" \
+        --metadata cluster-version="v${version}" \
 		--tags http-server
+
+set-version: ${target}
+	$(eval version := $(shell ${target} -version))
