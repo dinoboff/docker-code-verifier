@@ -139,18 +139,18 @@ func NewRequest(runtimeName string, body []byte) (*Request, error) {
 
 // The test result from the container.
 type Response struct {
-	Solved  bool
-	Printed string
-	Errors  string
-	Results []*Call
+	Solved  bool    `json:"solved"`
+	Printed string  `json:"printed,omitempty"`
+	Errors  string  `json:"errors,omitempty"`
+	Results []*Call `json:"results,omitempty"`
 }
 
 // One call result in a test.
 type Call struct {
-	Call     string
-	Expected string
-	Received string
-	Correct  bool
+	Call     string `json:"call"`
+	Expected string `json:"expected"`
+	Received string `json:"received"`
+	Correct  bool   `json:"correct"`
 }
 
 // Watch docker event (only support the stop event).

@@ -96,12 +96,13 @@ func main() {
 	}
 
 	server := NewServer(docker, maxJobs)
+	http.Handle(root, server)
 	log.Printf("Binding server to: %s", addr)
-	log.Fatal(http.ListenAndServe(addr, server))
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
 func urlb64Decode(s string) ([]byte, error) {
-	return base64.URLEncoding.DecodeString(s)
+	return base64.StdEncoding.DecodeString(s)
 }
 
 type processError struct {
@@ -120,7 +121,7 @@ func ProcessError(err error, msg string, code int) *processError {
 //
 // Should hold all the supported runtimes.
 type Index struct {
-	Runtimes []string
+	Runtimes []string `json:"runtimes"`
 }
 
 // The main server handler.
