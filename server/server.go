@@ -13,7 +13,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ChrisBoesch/docker-code-verifier/server/verifier"
-	"github.com/samalba/dockerclient"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -90,7 +89,7 @@ func main() {
 	log.Printf("Docker address: %s", dockerHost)
 	log.Printf("Docker cert. path: %s", dockerCertPath)
 
-	docker, err := getClient(dockerHost, dockerCertPath)
+	docker, err := verifier.NewClient(dockerHost, dockerCertPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -126,8 +125,7 @@ type Index struct {
 
 // The main server handler.
 type Server struct {
-	Docker  dockerclient.Client
-	Watcher verifier.StopWatcher
+	Docker verifier.Client
 
 	// increment when a job start;
 	// decrement when a job stop;
@@ -138,18 +136,12 @@ type Server struct {
 // Create a new server.
 //
 // `max` limit the number of concurent jobs.
-func NewServer(docker dockerclient.Client, max int) *Server {
+func NewServer(docker verifier.Client, max int) *Server {
 	if max < 1 {
 		max = 1
 	}
 
-	var (
-		watcher = verifier.NewWatcher()
-		jobs    = make(chan struct{}, max)
-	)
-
-	watcher.Start(docker)
-	return &Server{docker, watcher, jobs}
+	return &Server{docker, make(chan struct{}, max)}
 }
 
 // Main server handler. Run user provided code and return the results.
@@ -231,7 +223,7 @@ func (s *Server) proccessRequest(req *http.Request) (interface{}, *processError)
 		return nil, ProcessError(err, "Could not parse the json request", http.StatusBadRequest)
 	}
 
-	resp, err := verifier.Run(s.Docker, s.Watcher, payload, false)
+	resp, err := verifier.Run(s.Docker, payload, false)
 	if err != nil {
 		return nil, ProcessError(err, "Failed to run code", http.StatusBadRequest)
 	}

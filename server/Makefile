@@ -69,7 +69,7 @@ bin/server-osx-amd64: ${gosrc}
 	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} -e GOOS=darwin -e GOARCH=amd64 ${repo-name} go build -v -o $@
 
 test:
-	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} ${repo-name} go test ${package-name}/...
+	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} ${repo-name} go test ${package-name}/verifier/...
 
 upload: dist set-version
 	gsutil cp ${dist-path} gs://verifier/server-v${version}

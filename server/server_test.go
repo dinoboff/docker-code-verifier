@@ -25,7 +25,7 @@ func TestE2eServer(t *testing.T) {
 		t.Skip("Docker host is not set.")
 	}
 
-	docker, err := getClient(dockerHost, dockerCertPath)
+	docker, err := verifier.NewClient(dockerHost, dockerCertPath)
 	if err != nil {
 		t.Skip("Failed to create a docker client.")
 	}
@@ -68,7 +68,7 @@ func benchmarkE2eServer(max int, b *testing.B) {
 		b.Skip("Docker host is not set.")
 	}
 
-	docker, err := getClient(dockerHost, dockerCertPath)
+	docker, err := verifier.NewClient(dockerHost, dockerCertPath)
 	if err != nil {
 		b.Skip("Failed to create a docker client.")
 	}
