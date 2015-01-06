@@ -1,14 +1,5 @@
-FROM golang:1.3.3-cross
+FROM nginx:1.7.8
+MAINTAINER Damien Lebrun <dinoboff@gmail.com>
 
-# dependencies
-RUN go get github.com/tools/godep && \
-	go get code.google.com/p/go.tools/cmd/cover
-
-RUN mkdir -p /go/src/github.com/ChrisBoesch/docker-code-verifier
-COPY . /go/src/github.com/ChrisBoesch/docker-code-verifier/server
-WORKDIR /go/src/github.com/ChrisBoesch/docker-code-verifier/server
-
-RUN godep restore
-
-
-CMD ["bash"]
+COPY nginx.conf /etc/nginx/nginx.conf
+ADD www/ /www/

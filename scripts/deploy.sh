@@ -1,7 +1,9 @@
 #!/bin/bash
 #
 
-CLUSTER_VERSION=${VERSION:="dev"}
+
+CLUSTER_VERSION=${CLUSTER_VERSION:="dev"}
+
 INSTANCE_GROUP_NAME="verifier-cluster-${CLUSTER_VERSION}"
 TEMPLATE_NAME="verifier-template-${CLUSTER_VERSION}"
 HEALTHCHECK_NAME="basic-check"

@@ -8,18 +8,18 @@ This is the docker based code verifier to verify SingPath problem.
 
 ### Code verifier
 
-The verifiers are simple docker images with a common entry point behaviour. 
-An entry point should process a payload and return JSON formatted results.
+The verifiers are simple docker images for verifier server. Each image to verifier
+user solution for a runtime.
 
-The entry point signature is:
+By default a verifier server container (using the default `CMD` instruction) 
+should bind to port 5000 (for any host).
 
-```
-docker run --ti verifer-image [-e] [--tests TESTS] solution
-```
+ I should be parse the request inside a `jsonrequest` querystring or formdata
+ variable or in the json encoded body of a POST request.
 
-- `-e`: the input will be base64 encoded;
-- `--tests`: the tests to run;
-- `solution`: the solution to test.
+ In the case the Query string the jsonrequest may be base64 encoded.
+
+ It should support JSONP and CORS AJAX request.
 
 
 #### Implemented verifier
@@ -29,11 +29,8 @@ docker run --ti verifer-image [-e] [--tests TESTS] solution
 
 ### The web server
 
-The webserver is currently written in Go. 
-
-Working wth Docker and its REST remote API is easy with either Python, Node or Go.
-But with the I/O work involved, Nodejs and Go are better candidates. I picked 
-Go to speed up deployment.
+The webserver is a simple nginx proxy server (in charge as well of the 
+health check).
 
 It's currently ready for testing. See `server/README.md`.
 
@@ -49,3 +46,8 @@ TODO:
   when it receives a status request and the cluster is not running.
 - [ ] Should stop the cluster 
   when no cluster status request has been received recently.
+
+
+## Deployment 
+
+TODO

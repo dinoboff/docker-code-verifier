@@ -1,218 +1,34 @@
 # SingPath code verifier server
 
-Run user submitted code in container and return the result.
-
-## 1. Go environment
-
-### Local environment
-
-	Note: you can skip this step if you don't need to manage dependencies.
-	Using Docker, will allow you to edit, test and build the server.
-
-- [install Go](http://golang.org/doc/install) (installed on OS X).
-- [install mercurial](http://mercurial.selenic.com/downloads).
-- [install git](http://git-scm.com/downloads) (installed on OS X).
-
-You might need SVN too (installed on OS X) (TODO: check if required).
-
-Finally setup [your Go workspace](https://golang.org/doc/code.html#Organization).
-Make sure $GOPATH is properly set:
-```
-echo $GOPATH
-```
-
-And clone the repository in $GOPATH:
-```
-mkdir -p $GOPATH/src/github.com/ChrisBoesch/
-cd $GOPATH/src/github.com/ChrisBoesch/
-git clone git@github.com:ChrisBoesch/docker-code-verifier.git
-go get github.com/tools/godep
-cd docker-code-verifier/server
-godep restore ./...
-```
-
-	Note you should still create a docker go environment for cross compiling
-
-### On Docker
-
-Cross compilation and test are run in a docker container. Although, using a local
-Go install might be easier (to use go tools like coverage) or necessary for some tasks
-(updating dependencies), you can test and compile the server in docker 
-while editing the source locally.
-
-To install the Docker Go environment:
-
-- [install docker](https://docs.docker.com/installation/) (or boot2docker on win/osx).
-- `git clone git@github.com:ChrisBoesch/docker-code-verifier.git`.
-- optional, pull the Golang image in advance: `docker pull golang:1.3.3-cross`.
+The server is simple proxy. Each runtime verifier runs in a docker container
+and a nginx container linked to all verifier container proxy the verification
+request to them.
 
 
-	Note: that the [cross compiler Go docker image](https://registry.hub.docker.com/_/golang/) 
-	is rather large (1.4 Go). Pulling it the first time starting a Go container might 
-	take some time, but running the tests and compile is a rather fast.
+## Adding a verifier
+
+1. edit `server/bin/startup.sh`:
+  
+  - startup.sh should pull the  new verifier docker image
+  - it to start a new verifier container for the new verifier (each verifier 
+    container should have a unique name)
+  - it should link the new verifier docker container 
+    (add `--link container-name:container-alias` to the argument used to 
+    the nginx proxy server).
+
+2. edit `server/Dockerfile` to add a new `location` like:
+   ```location /new-verifier-endpoint {
+          proxy_pass    http://container-alias:5000;
+   }```
+   The new verifier endpoint should be unique. `container-alias` should be
+   the one the one set in `server/bin/startup.sh` to link the verifier container
+   container to the nginx proxy server container.
+
+3. Upload the server and verifier docker image for the version defined in 
+   `server/bin/startup.sh` (see the `VERSION` variable).
+   You can edit the Makefile rule named `` to do it automatically.
 
 
-## Nitrous environment
+## deploy
 
-TODO.
-
-
-
-## 3. Compilation
-
-We will build binary for windows (386/amd64), linux (amd64) and osx (amd64).
-
-We will create a docker container, share the current directory with the container 
-and start the container to compile the 4 binaries inside the shared directory. 
-
-```
-cd docker-code-verifier/server
-make
-```
-
-It should have created the 4 binaries:
-```
-$ ls -la bin/
-total 54392
-drwxr-xr-x   6 damien  staff   204B  8 Dec 18:15 ./
-drwxr-xr-x  10 damien  staff   340B  8 Dec 18:21 ../
--rwxr-xr-x   1 damien  staff   6.9M  8 Dec 18:12 server-linux-amd64
--rwxr-xr-x   1 damien  staff   7.0M  8 Dec 18:12 server-osx-amd64
--rwxr-xr-x   1 damien  staff   5.6M  8 Dec 18:12 server-windows-386.exe
--rwxr-xr-x   1 damien  staff   7.0M  8 Dec 18:12 server-windows-amd64.exe
-```
-
-`bin/server-linux-amd64` is the executable we will deploy to the server. The other 
-ones are meant for local testing.
-
-
-## 3. Testing
-
-You can test the libraries in the container:
-```
-cd docker-code-verifier/server
-make test
-```
-
-or locally:
-```
-cd docker-code-verifier/server
-go test ./...
-```
-
-
-## 4. Compile
-
-Using docker, compile and launch the server:
-```
-make dev target=bin/server-window-386.exe
-```
-
-Where target can be either `bin/server-windows-386.exe`, `bin/server-windows-amd64.exe`, 
-`bin/server-linux-amd64` or `bin/server-osx-amd64`. By default, it will use `bin/server-osx-amd64`.
-
-Locally, use:
-```
-go install
-$GOPATH/bin/server
-```
-
-
-## 5. Deployment test
-
-It will only create one instance to test the server on GCE and test the stater script.
-
-```
-cd docker-code-verifier/server
-make test-deploy
-```
-
-It will:
-- test and compile the server executable
-- upload it to Google Cloud storage
-- start a container.
-- the startup script (`/server/bin/startup.sh`) will pull the verifier images,
-  download the server executable and run it (it will be bound to port 80).
-
-You can check if the setup is ready by connecting to the server and 
-follow the startup logs (change):
-```
-gcloud compute --project "singpath-hd" ssh --zone "us-central1-b" "test-verifier"
-tail -f /var/log/startupscript.log 
-```
-
-Once you see something like:
-
-	Dec 10 00:57:26 test-verifier startupscript: 2014/12/10 00:57:26 Starting server...
-	Dec 10 00:57:26 test-verifier startupscript: 2014/12/10 00:57:26 Docker address: unix:///var/run/docker.sock
-	Dec 10 00:57:26 test-verifier startupscript: 2014/12/10 00:57:26 Docker cert. path: 
-	Dec 10 00:57:26 test-verifier startupscript: 2014/12/10 00:57:26 Binding server to: 0.0.0.0:80
-
-
-... The server is ready.
-
-To test, use the REST client like Postman and try:
-
-	POST /python HTTP/1.1
-	Host: localhost:5000
-	Content-Type: application/json
-	Cache-Control: no-cache
-
-	{"solution": "foo=1\nprint(foo)", "tests": ">>> foo\n1"}
-
-
-The response should be:
-
-	{
-	    "Solved": true,
-	    "Printed": "1\n",
-	    "Errors": "",
-	    "Results": [
-	        {
-	            "Call": "foo",
-	            "Expected": "1",
-	            "Received": "1",
-	            "Correct": true
-	        }
-	    ]
-	}
-
-The response time should be around 400-500 ms .
-
-
-	Note: the current deployment is only suitable for testing. it will need something
-	to monitor the process and restarted it if needed.
-
-
-If you need to upload a fix to the current version 
-(the version is set in `/server/server.go` line 25):
-```
-make upload
-```
-
-The next time an instance reboot, it will download the updated server
-and install it (assuming it is set to install the current version).
-
-To know which version instance are set to download and install, check
-the cluster-version metadata:
-```
-gcloud compute instances describe instance-name --zone instance-zone
-```
-
-The metadata item key is "cluster-version".
-
-
-## 6. TODO:
-
-- [ ] Better documentation (including development nitrous).
-- [x] More request type supported. Only support POST Ajax request. It support CORS,
-  and the can be send from any domain. The server should support GET 
-  and JSONP request.
-- [ ] e2e tests.
-- [ ] load testing and tuning concurrent request (set to 5 right now)
-- [x] Proper installation of the server with something like supervisor
-  monitoring the process.
-- [x] Create instance template, instance group manager and 
-  load balancer for the verifier.
-- [ ] Manage startup and shutdown of the cluster via a Google App Engine
-  monitor app.
+TODO:

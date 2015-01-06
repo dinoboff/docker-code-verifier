@@ -83,7 +83,7 @@ class TestRunner(object):
             self.printed = patcher.restore().getvalue()
             patcher.close()
 
-    def to_json(self):
+    def to_dict(self):
         data = {
             'solved': self.solved,
             'printed': self.printed
@@ -93,7 +93,7 @@ class TestRunner(object):
         else:
             data['results'] = self.results
 
-        return json.dumps(data)
+        return data
 
     def _run_solution(self):
         self._exec(self.solution)

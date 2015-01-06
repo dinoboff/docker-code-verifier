@@ -2,13 +2,15 @@ FROM python:3.4-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		make \
-	&& rm -rf /var/lib/apt/lists/*
+	&& rm -rf /var/lib/apt/lists/* \
+	&& pip install flask \
+	&& adduser --system --home /playground verifier
 
 COPY . /app
-WORKDIR /app
+RUN python3 -m compileall /app/
 
-RUN python3 -m compileall .
+USER verifier
+WORKDIR /playground
 
-
-ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["bash"]
+EXPOSE 5000
+CMD ["python3", "/app/server.py", "--host=0.0.0.0", "--port=5000"]

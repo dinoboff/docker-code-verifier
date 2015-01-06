@@ -1,7 +1,7 @@
 cwd = $(shell pwd)
 
 repo-name ?= singpath/verifier-python3
-tag ?= v0.1
+tag ?= v0.2
 
 docker ?= docker
 
@@ -15,13 +15,7 @@ push-images: images
 	${docker} push ${repo-name}:${tag}
 
 run-image:
-	${docker} run -ti --rm -v ${cwd}:/app ${repo-name}
-
-run-example:
-	${docker} run --rm ${repo-name} -e --tests="Pj4+IGZvbwox" "Zm9vPTE="	
+	${docker} run -ti --rm -p 5000:5000 -v ${cwd}:/app ${repo-name}
 
 test:
 	${docker} run -ti --rm -v ${cwd}:/app ${repo-name} python3 -m unittest discover -s codeverifier/
-
-help:
-	${docker} run -ti --rm -v ${cwd}:/app ${repo-name} -h

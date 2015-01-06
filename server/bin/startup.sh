@@ -1,51 +1,47 @@
 #!/bin/bash
 
-BIN=/usr/local/bin/verifier-server
-INIT=/etc/init.d/verifier-server-d
-DAEMONUSER=verifier-server
-ARCHIVE=server.zip
-SRC=./verifier-server
+VERSION="dev"
+PYTHON_IMAGE="singpath/verifier-python3"
+SERVER_IMAGE="singpath/verifier-server"
+PYTHON_CONTAINER="python"
+SERVER_CONTAINER="server"
+DATA=/var/verifier/www
 
+# Get version from metadata
 if [[ -z "$CLUSTER_VERSION" ]]; then
     CLUSTER_VERSION=$(curl "http://metadata/computeMetadata/v1/instance/attributes/cluster-version" -H "Metadata-Flavor: Google")
 fi
 
 if [[ -z "$CLUSTER_VERSION" ]]; then
-    echo "Cluster version is missing. Using 'latest' as default"
-    CLUSTER_VERSION="dev"
+    echo "Cluster version is missing. Using default, ${VERSION}."
 else
     echo "Cluster version: $CLUSTER_VERSION"
+    VERSION="$CLUSTER_VERSION"
 fi
 
-# Istall dependencies
-sudo apt-get update
-sudo apt-get install -y libcap2-bin make unzip
+
+#stop packet forward from containers to outside network
+sudo iptables -D FORWARD -i docker0 ! -o docker0 -j ACCEPT
+sudo iptables -D FORWARD -i docker0 ! -o docker0 -j DROP
+sudo iptables -D FORWARD -i docker0 ! -o docker0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -A FORWARD -i docker0 ! -o docker0 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+sudo iptables -A FORWARD -i docker0 ! -o docker0 -j DROP
+
 
 # pull images
-sudo docker pull singpath/verifier-python3
+sudo docker pull "$PYTHON_IMAGE":"$VERSION"
+sudo docker pull "$SERVER_IMAGE":"$VERSION"
 
-# create user
-sudo useradd -s /usr/sbin/nologin -r -M "$DAEMONUSER" > /dev/null 2>&1
-sudo adduser "$DAEMONUSER" docker > /dev/null 2>&1
 
-# Install/update server
+# Setup server data
+sudo mkdir -p "$DATA"
+rm -rf "${DATA}/index.html"
+echo "<html>serving...</html>" | sudo tee "${DATA}/index.html"
 
-rm -f "$ARCHIVE"
-wget "http://storage.googleapis.com/verifier/server-${CLUSTER_VERSION}" -O "$ARCHIVE"
 
-# start current daemon incase the instance has been rebooted
-if [[ -f "$INIT" ]]; then
-    sudo "$INIT" stop
-fi
+# start verifier containers
+sudo docker run -d --name "$PYTHON_CONTAINER" --restart="always"  "$PYTHON_IMAGE":"$VERSION"
 
-if [[ -f "${SRC}/Makefile" ]]; then
-    cd "$SRC"; sudo make clean; cd -
-fi
 
-# install new version
-rm -rf "$SRC"
-unzip "$ARCHIVE"
-cd verifier-server; sudo make install; cd -
-
-# Start daemon
-sudo "$INIT" start
+# start the nginx proxy
+sudo docker run -d --name "$SERVER_CONTAINER" -p 80:80 -v "$DATA":/www --restart="always" --link "$PYTHON_CONTAINER":python "$SERVER_IMAGE":"$VERSION"

@@ -1,89 +1,39 @@
 cwd = $(shell pwd)
 
-package-name = github.com/ChrisBoesch/docker-code-verifier/server
 repo-name ?= singpath/verifier-server
-tag ?= v0.1
-gosrc = $(shell find . -name "*.go" | sed 's/ /\\ /g')
-target ?= bin/server-osx-amd64
+tag ?= dev
 
-dist-name = verifier-server
-dist-zip = ${dist-name}.zip
-dist-path = dist/${dist-zip}
+docker ?= docker
 
 vm-image="container-vm-v20141208"
 vm-image-project="google-containers"
 vm-machine-type="f1-micro"
 vm-zone="us-central1-a"
 
-docker ?= docker
-
-build: images test bin/server-linux-amd64 ${target}
-	rm -rf build
-	mkdir -p build
-	cp bin/{server-linux-amd64,init.sh,Makefile} build/
-
-dist: build
-	rm -rf dist
-	mkdir -p dist/${dist-name}
-	cp build/* dist/${dist-name}
-	cd dist; zip ./${dist-zip} ${dist-name}/*
-	rm -rf dist/${dist-name}
-
-dev: images test ${target}
-	echo "starting server..."
-	${target}
-
-.images/${repo-name}: Dockerfile
-	mkdir -p .images/singpath/
+images:
 	${docker} build --rm=true -t ${repo-name} .
-	touch $@
-
-.images/${repo-name}.${tag}: Dockerfile
-	mkdir -p .images
 	${docker} build --rm=true -t ${repo-name}:${tag} .
-	touch $@
 
-images: .images/${repo-name} .images/${repo-name}.${tag}
+push-images: images
+	${docker} login
+	${docker} push ${repo-name}:latest
+	${docker} push ${repo-name}:${tag}
 
 run-image:
-	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} ${repo-name}
+	${docker} run -d --name python --restart="always" singpath/verifier-python3:${tag}
+	${docker} run -ti --rm -p 8080:80 -v ${cwd}/www:/www --link python:python ${repo-name}
+.PHONY: images push-images run-image
 
-bin/server-windows-386.exe: ${gosrc}
-	mkdir -p ./bin
-	rm -rf $@
-	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} -e GOOS=windows -e GOARCH=386 ${repo-name} go build -v -o $@
 
-bin/server-windows-amd64.exe: ${gosrc}
-	mkdir -p ./bin
-	rm -rf $@
-	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} -e GOOS=windows -e GOARCH=amd64 ${repo-name} go build -v -o $@
+push-deploy-images: push-images
+	cd ../verifiers/python3; make push-images tag=${tag}
 
-bin/server-linux-amd64: ${gosrc}
-	mkdir -p ./bin
-	rm -rf $@
-	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} -e GOOS=linux -e GOARCH=amd64 ${repo-name} go build -v -o $@
-
-bin/server-osx-amd64: ${gosrc}
-	mkdir -p ./bin
-	rm -rf $@
-	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} -e GOOS=darwin -e GOARCH=amd64 ${repo-name} go build -v -o $@
-
-test:
-	${docker} run --rm -ti -v ${cwd}:/go/src/${package-name} ${repo-name} go test ${package-name}/...
-
-upload: dist set-version
-	gsutil cp ${dist-path} gs://verifier/server-v${version}
-	gsutil acl set public-read gs://verifier/server-v${version}
-
-test-deploy: upload
+test-deploy: push-deploy-images
 	gcloud compute instances create test-verifier-instance \
 		--image ${vm-image} \
 		--image-project ${vm-image-project} \
 		--machine-type ${vm-machine-type} \
 		--zone ${vm-zone} \
-        --metadata-from-file startup-script="${cwd}/bin/startup.sh" \
-        --metadata cluster-version="v${version}" \
+		--metadata cluster-version="${tag}" \
 		--tags http-server
-
-set-version: ${target}
-	$(eval version := $(shell ${target} -version))
+.PHONY: push-deploy-images test-deploy
