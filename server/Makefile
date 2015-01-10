@@ -1,7 +1,7 @@
 cwd = $(shell pwd)
 
 repo-name ?= singpath/verifier-server
-tag ?= dev
+tag ?= latest
 
 docker ?= docker
 
@@ -10,9 +10,13 @@ vm-image-project="google-containers"
 vm-machine-type="f1-micro"
 vm-zone="us-central1-a"
 
-images:
+.images/${repo-name}: Dockerfile nginx.conf www/**/*
+	mkdir -p .images/singpath
 	${docker} build --rm=true -t ${repo-name} .
 	${docker} build --rm=true -t ${repo-name}:${tag} .
+	touch $@
+
+images: .images/${repo-name}
 
 push-images: images
 	${docker} login
@@ -20,10 +24,14 @@ push-images: images
 	${docker} push ${repo-name}:${tag}
 
 run-image:
-	${docker} run -d --name python --restart="always" singpath/verifier-python3:${tag}
-	${docker} run -ti --rm -p 8080:80 -v ${cwd}/www:/www --link python:python ${repo-name}
+	cd ../verifiers/angularjs; make images tag=${tag}
+	cd ../verifiers/python3; make images tag=${tag}
+	${docker} run -d --name python singpath/verifier-python3:${tag}
+	${docker} run -d --name angularjs-static -v /www/_protractor singpath/verifier-angularjs-static:${tag}
+	${docker} run -d --name angularjs-selenium --link angularjs-static:static selenium/standalone-chrome:2.44.0
+	${docker} run -d --name angularjs --link angularjs-selenium:selenium --volumes-from angularjs-static singpath/verifier-angularjs:${tag}
+	${docker} run -ti --rm -p 8080:80 -v ${cwd}/www:/www --link python:python --link angularjs:angularjs ${repo-name}
 .PHONY: images push-images run-image
-
 
 push-deploy-images: push-images
 	cd ../verifiers/python3; make push-images tag=${tag}
