@@ -90,7 +90,7 @@ def verifiy_get():
 @app.route("/python", methods=["POST"])
 @app.route("/python3", methods=["POST"])
 def verifiy_post():
-    if request.headers.get("Content-Type") == JSON_TYPE:
+    if request.headers.get("Content-Type").split(';')[0] == JSON_TYPE:
         req = request.get_json()
         if not req:
             return response(code=CODE_BAD_REQUEST, errors="Invalid JSON body.")

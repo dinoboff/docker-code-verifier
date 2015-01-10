@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Verifier Console</title>
+    <link rel="stylesheet" href="./vendor/angular-material/angular-material.min.css">
+
+    <style type="text/css">
+    label {
+        display: block;
+        padding-bottom: 5px;
+    }
+    textarea {
+        width: 100%;
+        height: 200px;
+        font-family: monospace;
+        box-sizing: border-box;
+        border: 3px solid #cccccc;
+        padding: 5px;
+    }
+    </style>
+
+</head>
+
+<body ng-app="console" layout="row" ng-controller="Verifier as ctrl">
+
+    <md-sidenav class="md-sidenav-left md-whiteframe-z2" md-component-id="left" md-is-locked-open="true">
+
+        <md-toolbar class="md-theme-indigo">
+            <h1 class="md-toolbar-tools">Verifier Console</h1>
+        </md-toolbar>
+
+        <md-content class="md-padding">
+            <ul>
+                <li>
+                    <a href="" ng-click="ctrl.setVerifier('angularjs')">Angular JS</a>
+                </li>
+
+                <li>
+                    <a href="" ng-click="ctrl.setVerifier('python3')">Python 3</a>
+                </li>
+            </ul>
+        </md-content>
+
+    </md-sidenav>
+
+
+    <md-content flex layout="column" layout-fill>
+
+        <md-toolbar class="md-theme-indigo">
+            <h2 class="md-toolbar-tools">{{ctrl.verifier.name}}</h2>
+        </md-toolbar>
+
+        <md-content flex layout-margin layout-padding class="md-padding">
+            <div layout="row" layout-padding layout-margin>
+                <div flex>
+                    <label for="solution">Soluton:</label>
+                    <textarea id="solution" ng-model="ctrl.verifier.payload.solution"></textarea>
+                </div>
+
+                <div flex>
+                    <label for="tests">Tests:</label>
+                    <textarea id="tests" ng-model="ctrl.verifier.payload.tests"></textarea>
+                </div>
+            </div>
+
+            <div layout-padding layout-margin layout="column">
+                <md-button flex class="md-primary md-raised" ng-disabled="ctrl.verifying" ng-click="ctrl.verify()">
+                    Verify
+                </md-button>
+            </div>
+
+            <div style="margin: 8px; padding: 8px">
+                <label for="results">Results</label>
+                <textarea id="results">{{ctrl.results|json}}</textarea>
+            </div>
+
+        </md-content>
+
+
+        <script src="./vendor/hammerjs/hammer.min.js"></script>
+        <script src="./vendor/angular/angular.min.js"></script>
+        <script src="./vendor/angular-animate/angular-animate.min.js"></script>
+        <script src="./vendor/angular-aria/angular-aria.min.js"></script>
+        <script src="./vendor/angular-material/angular-material.min.js"></script>
+        <script type="text/javascript">
+        angular.module('console', ['ngMaterial'])
+            .controller('Verifier', function($http) {
+                var self = this;
+                var verifiers = {
+                    python3: {
+                        name: 'Python 3',
+                        endpoint: '/python3',
+                        payload: {
+                            solution: 'foo = 1',
+                            tests: '>>> foo\n1'
+                        }
+                    },
+                    angularjs: {
+                        name: 'Angular JS',
+                        endpoint: '/angularjs',
+                        payload: {
+                            solution: [
+                                '<!DOCTYPE html>',
+                                '<html><head><title>Test binding</title></head>',
+                                '  <body ng-app="myApp">',
+                                '    <p ng-controller="MyController as ctrl">',
+                                '      Hello {{ctrl.name}}!',
+                                '    </p>',
+                                '    &lt;script src="/vendor/angular/angular.min.js">&lt;/script>',
+                                '    &lt;script>',
+                                '      angular.module(\'myApp\', [])',
+                                '        .controller(\'MyController\', function() {',
+                                '          this.name = "Bob";',
+                                '        });',
+                                '    &lt;/script>',
+                                '  </body>',
+                                '</html>'
+                            ].join('\n').replace(/&lt;/g, '<'),
+                            tests: [
+                                'describe(\'angularjs ng-controller\', function() {',
+                                '  it(\'should say "hello Bob"\', function() {',
+                                '    browser.get(\'./\');',
+                                '',
+                                '    expect(',
+                                '      element(by.binding(\'ctrl.name\')).getText()',
+                                '    ).toBe(\'Hello Bob!\');',
+                                '  });',
+                                '});',
+                            ].join('\n')
+                        }
+                    }
+                };
+
+                this.verifier = verifiers.angularjs;
+                this.verifying = false;
+
+                this.setVerifier = function(id) {
+                    if (this.verifying) {
+                        return;
+                    }
+                    this.verifier = verifiers[id];
+                };
+
+                this.verify = function() {
+                    if (this.verifying) {
+                        return;
+                    }
+
+                    this.verifying = true;
+                    this.results = 'verifying...';
+
+                    $http.post(this.verifier.endpoint, this.verifier.payload).then(function(resp) {
+                        self.results = resp.data;
+                    }, function(resp) {
+                        self.results = resp.data;
+                    }).finally(function() {
+                        self.verifying = false;
+                    });
+                };
+            });
+        </script>
+
+</body>
+
+</html>
