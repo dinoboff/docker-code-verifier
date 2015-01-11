@@ -61,8 +61,8 @@ var fTempDir = function(staticDir) {
     }
   });
 
-  return f.promise.then(function(path){
-    return chmod(path, '0777').then(function(){
+  return f.promise.then(function(path) {
+    return chmod(path, '0777').then(function() {
       return path;
     });
   });
@@ -91,11 +91,16 @@ var setUpTest = function(solution, tests, options) {
       seleniumAddress: options.seleniumUrl,
       specs: [paths.specs],
       baseUrl: paths.html.replace(options.staticPrefixRegex, options.staticUrl),
+      capabilities: {
+        'browserName': 'phantomjs'
+      },
       framework: 'jasmine',
       resultJsonOutputFile: paths.results,
       jasmineNodeOpts: {
         showColors: false
-      }
+      },
+      allScriptsTimeout: 5000,
+      getPageTimeout: 2500
     };
 
     var fSpec = writeFile(paths.specs, tests);
@@ -187,8 +192,10 @@ var testSolution = function(solution, tests, options) {
           throw new Error('Failed to parse protractor results (' + e + ')');
         }
         f.resolve(results);
-      }).catch(function(e){
-        f.reject({errors: e.toString()});
+      }).catch(function(e) {
+        f.reject({
+          errors: e.toString()
+        });
       }).finally(cleanUp);
 
     });
