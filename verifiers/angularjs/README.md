@@ -1,4 +1,18 @@
-# Python3 code verifier
+# Angular JS verifier
+
+The Angular JS verifier require 3 types on container:
+
+- the verifier server: it receives the json requests, parse them and run the 
+  payload via protractor;
+- the selenium hub server: protractor will send the tests to the selenium server;
+- the selenium nodes: currently only one Phantomjs node.
+
+Note that tests are currently run serially. To run concurrent tests in parallel,
+we will need more than one phantomjs container running.
+
+
+TODO:
+- [ ] check how many Phantomjs container can run on the small GCE instances.
 
 
 ## Requirements
