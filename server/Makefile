@@ -33,7 +33,7 @@ run-image:
 	${docker} run -d --name python singpath/verifier-python3:${tag}
 	${docker} run -d --name angularjs-static -v /www/_protractor singpath/verifier-angularjs-static:${tag}
 	${docker} run -d --name angularjs-selenium --link angularjs-static:static selenium/hub:2.44.0
-	${docker} run -d --name angularjs-phantomjs -h container.host -p 5555:5555 -e NODE_PORT=5555 --link angularjs-selenium:hub --link angularjs-static:static singpath/verifier-angularjs-phantomjs:${tag}
+	${docker} run -d --name angularjs-phantomjs -h 0.phantomjs.local --link angularjs-selenium:hub --link angularjs-static:static singpath/verifier-angularjs-phantomjs:${tag}
 	${docker} run -d --name angularjs --link angularjs-selenium:selenium --link angularjs-static:static --volumes-from angularjs-static singpath/verifier-angularjs:latest
 	${docker} run -ti --rm -p 8080:80 -v ${cwd}/www:/www --link python:python --link angularjs:angularjs ${repo-name}
 .PHONY: images push-images run-image

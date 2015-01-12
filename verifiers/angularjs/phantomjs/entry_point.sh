@@ -6,8 +6,9 @@ function shutdown {
 	wait $NODE_PID
 }
 
-node_ip=$(cat /etc/hosts | grep container.host | awk '{print $1}')
-node_address=${node_ip}:${NODE_PORT}
+node_ip=$(cat /etc/hosts | grep phantomjs.local | awk '{print $1}')
+node_address=${node_ip}:8080
+echo "Phantomjs GhostDriver will bind to " $node_address
 
 started=1
 while [[ $started -ne 0 ]]; do

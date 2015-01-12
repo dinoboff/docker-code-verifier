@@ -53,7 +53,7 @@ run-image: images
 	${docker} rm -f angularjs-static angularjs-selenium angularjs-phantomjs angularjs || echo "some container were not running..."
 	${docker} run -d --name angularjs-static -v /www/_protractor ${static-repo-name}:${tag}
 	${docker} run -d --name angularjs-selenium -p 4444:4444 --link angularjs-static:static selenium/hub:2.44.0
-	${docker} run -d --name angularjs-phantomjs -h container.host -p 5555:5555 -e NODE_PORT=5555 --link angularjs-selenium:hub --link angularjs-static:static ${phantomjs-repo-name}:${tag}
+	${docker} run -d --name angularjs-phantomjs -h 0.phantomjs.local --link angularjs-selenium:hub --link angularjs-static:static ${phantomjs-repo-name}:${tag}
 	${docker} run -ti --rm -p 5000:5000 --link angularjs-selenium:selenium --link angularjs-static:static --volumes-from angularjs-static -v ${cwd}:/app ${repo-name}:${tag} bash
 
 test: images

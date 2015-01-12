@@ -54,7 +54,7 @@ sudo docker pull "$SELENIUM_PHANTOMJS_IMAGE":"$VERSION"
 sudo docker run -d --name "$PYTHON_CONTAINER" --restart="always"  "$PYTHON_IMAGE":"$VERSION"
 sudo docker run -d --name "$ANGULARJS_STATIC_CONTAINER" --restart="always" -v /www/_protractor "$ANGULARJS_STATIC_IMAGE":"$VERSION"
 sudo docker run -d --name "$SELENIUM_CONTAINER" --restart="always" --link "$ANGULARJS_STATIC_CONTAINER":static "$SELENIUM_IMAGE":"$SELENIUM_VERSION"
-sudo docker run -d --name "$SELENIUM_PHANTOMJS_CONTAINER" --restart="always" -h container.host -p 5555:5555 -e NODE_PORT=5555 --link "$SELENIUM_CONTAINER":hub --link "$ANGULARJS_STATIC_CONTAINER":static "$SELENIUM_PHANTOMJS_IMAGE":"$VERION"
+sudo docker run -d --name "$SELENIUM_PHANTOMJS_CONTAINER" --restart="always" -h 0.phantomjs.local --link "$SELENIUM_CONTAINER":hub --link "$ANGULARJS_STATIC_CONTAINER":static "$SELENIUM_PHANTOMJS_IMAGE":"$VERION"
 sudo docker run -d --name "$ANGULARJS_CONTAINER" --restart="always" --link "$SELENIUM_CONTAINER":selenium --volumes-from "$ANGULARJS_STATIC_CONTAINER" "$ANGULARJS_IMAGE":"$VERSION"
 
 
