@@ -75,27 +75,45 @@ See server's README.md.
 
 ### Deploying a cluster
 
-`scripts/deploy.sh` is a bash script creating an instance template, a target pool,
-its healthcheck, a network balancer, an instance group and an auto-scaler for the
-instance group. To deploy it:
+`scripts/deploy.sh` is a bash script used to setup and start a cluster:
 ```
-export CLUSTER_VERSION=v1.0
-cd server; make push-deploy-images tag=$CLUSTER_VERSION; cd -
-./scripts/deploy.sh start
-```
-Note that you can skip the second line if the images of the various containers
-have already been uploaded (while testing an instance) and are up-to-date.
+$ ./scripts/deploy.sh help
+usage: setup|start|stop|delete 
 
-Note also that you should be part of the 
-[Singpath organization](https://registry.hub.docker.com/repos/singpath/) 
-to publish container images on docker hub. 
-
-
-To stop it:
-```
-export CLUSTER_VERSION=v1.0
-./scripts/deploy.sh clean
+setup     Create the an image, an instance template and a load balancer.
+start     Manually start the cluster (an instance group and an autoscaler).
+          The cluster should already be setup.
+stop      Stop the instance group.
+delete    Delete the cluster (instance group, load balancer and image.)
+          The cluster shouldn't be running.
 ```
 
-TODO:
-- [ ] The process is rather slow and need improvement.
+To setup a cluster that Singpath can start:
+
+1. Bump the version in `./VERSION`.
+
+2. Publish the container images:
+   ```
+   cd server
+   make push-deploy-images
+   cd ..
+   ```
+
+3. Setup the cluster:
+   ```
+   .scripts/deploy.sh setup
+   ```
+
+4. Try the new cluster:
+   ```
+   .scripts/deploy.sh start
+   ```
+
+5. Stop the cluster:
+   ```
+   .scripts/deploy.sh stop
+   ```
+
+An instance template and a network load balancer should now be ready. You just to
+update Singpath verifier version. The next time Singpath starts the cluster it
+will use the new version.

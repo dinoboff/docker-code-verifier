@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html><head><title>Test binding</title></head>
+  <body ng-app="myApp">
+    <p ng-controller="MyController as ctrl">
+      Hello {{ctrl.name}}!
+    </p>
+    <script src="/vendor/angular/angular.min.js"></script>
+    <script>
+      angular.module('myApp', [])
+        .controller('MyController', function() {
+          this.name = "Bob";
+        });
+    </script>
+  </body>
+</html>

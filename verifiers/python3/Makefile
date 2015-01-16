@@ -1,32 +1,32 @@
 cwd = $(shell pwd)
 
 repo-name ?= singpath/verifier-python3
-tag ?= v0.2
+tag ?= latest
+version ?= $(shell cat ../../VERSION)
 
 docker ?= docker
 
-.images/${repo-name}: Dockerfile server.py codeverifier/**/*
+.images/${repo-name}.${tag}: .images/${repo-name}.${version}
 	mkdir -p .images/singpath
-	${docker} build --rm=true -t ${repo-name} .
+	${docker} rmi ${repo-name}:${tag} > /dev/null 2>&1 || echo "latest tag not set yet."
+	${docker} tag ${repo-name}:${version} ${repo-name}:${tag}
 	touch $@
 
-.images/${repo-name}.${tag}: Dockerfile server.py codeverifier/**/*
+.images/${repo-name}.${version}: Dockerfile server.py codeverifier/**/*
 	mkdir -p .images/singpath
-	${docker} build --rm=true -t ${repo-name}:${tag} .
+	${docker} build --rm=true -t ${repo-name}:${version} .
 	touch $@
 
-images: .images/${repo-name} .images/${repo-name}.${tag}
+images: .images/${repo-name}.${tag}
 
 push-images: images
-	${docker} login
-	${docker} push ${repo-name}:latest
-	${docker} push ${repo-name}:${tag}
+	${docker} push ${repo-name}:${version}
 
 .PHONY: images push-images
 
 run-image:
-	${docker} run -ti --rm -p 5000:5000 -v ${cwd}:/app ${repo-name}
+	${docker} run -ti --rm -p 5000:5000 -v ${cwd}:/app ${repo-name}:${version}
 
 test:
-	${docker} run -ti --rm -v ${cwd}:/app ${repo-name} python3 -m unittest discover -s codeverifier/
+	${docker} run -ti --rm -v ${cwd}:/app ${repo-name}:${version} python3 -m unittest discover -s codeverifier/
 .PHONY: run-image test

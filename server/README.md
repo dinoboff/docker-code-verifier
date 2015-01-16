@@ -18,18 +18,17 @@ Note:
 
 ## Adding a verifier
 
-1. edit `server/bin/startup.sh`:
+1. edit `server/bin/startup_*.sh` files:
   
-  - startup.sh should pull the  new verifier docker image
-  - it to start a new verifier container for the new verifier (each verifier 
-    container should have a unique name)
+  - `bin/startup_setup.sh` should pull the  new verifier docker image
+  - `bin/startup_run` should start a new verifier container 
+    for the new verifier (each verifier container should have a unique name)
   - it should link the new verifier docker container 
     (add `--link container-name:container-alias` to the argument used to 
     the nginx proxy server).
 
-2. edit server/Makefile various task (`run-image` and `push-deploy-images`) 
-   to build, run and publish the new images when testing the deployment of 
-   an instance.
+2. edit server/Makefile various tasks to build, run and publish 
+   the new images when testing the deployment of an instance.
 
 3. edit `server/nginx.conf` to add a new `location` like:
    ```location /new-verifier-endpoint {
@@ -39,37 +38,45 @@ Note:
    the one the one set in `server/bin/startup.sh` to link the verifier container
    container to the nginx proxy server container.
 
-4. Upload the server and verifier docker image for the version:
+4. bump the version number in `../VERSION`
+
+5. Upload the server and verifier docker image for the version:
    ```make push-deploy-images```.
 
 
 ## deployment
 
 To test the deployment of a simple instance:
-```cd server
-export CLUSTER_VERSION=v1.0
-make push-deploy-images tag=$CLUSTER_VERSION
-make test-deploy tag=CLUSTER_VERSION```
+```
+cd server
+make push-deploy-images
+make test-deploy
+```
 
-Note that you can skip the third line if the images of the various containers
+Note that you can skip the second line if the images of the various containers
 have already been uploaded (while testing an instance) and are up-to-date.
 
 Note also that you should be part of the 
 [Singpath organization](https://registry.hub.docker.com/repos/singpath/) 
 to publish container images on docker hub. 
 
-
 Give a few seconds for the instance to start up, then connect to it over ssh:
-```gcloud compute --project <project-id> ssh --zone "us-central1-a" "test-verifier-instance"```
+```
+gcloud compute --project <project-id> ssh --zone "us-central1-a" "test-verifier-instance"
+```
 
 Check the startup logs:
-```tail -n +0 -f /var/log/startupscript.log```
+```
+tail -n +0 -f /var/log/startupscript.log
+```
 
 Once you see "Finished running startup script /var/run/google.startup.script", 
 the server should be running. You can leave the tail (ctrl+c) and end 
 the ssh session:
-```[ctrl+c]
-exit```
+```
+[ctrl+c]
+exit
+```
 
 
 You should see some thing like:
@@ -78,7 +85,9 @@ You should see some thing like:
   Connection to 1.2.3.4 closed.
 
 Note the IP address (here, 1.2.3.4) and visit it:
-```open http://1.2.3.4```
+```
+open http://1.2.3.4
+```
 
 On OS X it would open a browser at `http://1.2.3.4`; it should display 
 "Serving...". Visit `/console/`; you should found a form to test the 
