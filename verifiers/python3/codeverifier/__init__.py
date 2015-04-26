@@ -1,6 +1,6 @@
 import doctest
 import io
-import json
+import logging
 import sys
 
 
@@ -56,7 +56,7 @@ class TestRunner(object):
 
         return (
             self.results is not None
-            and all(r['correct'] for r in self.results)
+            and all(r['correct'] for r in self.results if r is not None)
         )
 
     def __init__(self, solution, tests):
