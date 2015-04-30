@@ -11,20 +11,20 @@ This is the docker based code verifier to verify SingPath problem.
 The verifiers are simple docker images for verifier server. Each image verifies
 user solution for a runtime.
 
-By default a verifier server container (using the default `CMD` instruction) 
+By default a verifier server container (using the default `CMD` instruction)
 should bind to port 5000 (for any host).
 
 It should parse the JSON object request inside a `jsonrequest` querystring
-( GET request only) or a formdata parameter (POST request), or in the body 
+( GET request only) or a formdata parameter (POST request), or in the body
 of a POST request.
 
-In the case the Query string the jsonrequest may be url encoded or 
+In the case the Query string the jsonrequest may be url encoded or
 base64 encoded.
 
 It should support JSONP and CORS AJAX request.
 
-The JSON request must have a `solution` attribute and may have a `tests` 
-attribute. If the tests are missing the verifier should simply check the 
+The JSON request must have a `solution` attribute and may have a `tests`
+attribute. If the tests are missing the verifier should simply check the
 solution loads correctly.
 
 
@@ -36,7 +36,7 @@ solution loads correctly.
 
 ### The web server
 
-The webserver is a simple nginx proxy server (in charge as well of the 
+The webserver is a simple nginx proxy server (in charge as well of the
 health check).
 
 It's currently ready for testing. See `server/README.md`.
@@ -45,14 +45,6 @@ It's currently ready for testing. See `server/README.md`.
 ### GAE manager app
 
 Always on. Start and stop a cluster.
-
-TODO:
-- [ ] Serves cluster status of the cluster (its load balancer IP and running status)
-  those request can used to keep the cluster up.
-- [ ] Should start a cluster of code verifier cluster 
-  when it receives a status request and the cluster is not running.
-- [ ] Should stop the cluster 
-  when no cluster status request has been received recently.
 
 
 ## Deployment
@@ -64,7 +56,7 @@ Requirements:
 - bash and make (you will need to install [cygwin](http://cygwin.com/) on windows).
 
 Note:
-	
+
 	On Linux, you might have to run the commands running sudo.
 
 
@@ -78,7 +70,7 @@ See server's README.md.
 `scripts/deploy.sh` is a bash script used to setup and start a cluster:
 ```
 $ ./scripts/deploy.sh help
-usage: setup|start|stop|delete 
+usage: setup|start|stop|delete
 
 setup     Create the an image, an instance template and a load balancer.
 start     Manually start the cluster (an instance group and an autoscaler).

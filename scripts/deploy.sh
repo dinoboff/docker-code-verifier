@@ -16,7 +16,7 @@ FORWARD_RULE_NAME="verifier-rule-${CLUSTER_VERSION//./-}"
 REGION="us-central1"
 ZONE="us-central1-a"
 
-BASE_IMAGE="container-vm-v20150112"
+BASE_IMAGE="container-vm-v20150317"
 BASE_IMAGE_PROJECT="google-containers"
 VM_IMAGE="verifier-${CLUSTER_VERSION//\./-}"
 VM_IMAGE_PROJECT="singpath-hd"

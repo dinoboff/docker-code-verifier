@@ -6,7 +6,7 @@ version ?= $(shell cat ../VERSION)
 
 docker ?= docker
 
-vm-image="container-vm-v20141208"
+vm-image="container-vm-v20150317"
 vm-image-project="google-containers"
 vm-machine-type="f1-micro"
 vm-zone="us-central1-a"
