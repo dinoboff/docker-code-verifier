@@ -198,6 +198,26 @@ describe('runner', function() {
       }).catch(done);
     });
 
+    it('should handle async test', function(done) {
+      var ctx = {
+        __tests__: [{
+          test: 'test 1',
+          cb: function() {
+            return new Promise(function(_, fails) {
+              setTimeout(function() {
+                fails(new Error());
+              }, 100);
+            });
+          }
+        }]
+      };
+
+      runner.runTests(ctx).then(function(response) {
+        assert.equal(false, response.solved);
+        done();
+      }).catch(done);
+    });
+
   });
 
   describe('testSolution', function() {
@@ -216,6 +236,17 @@ describe('runner', function() {
       runner.testSolution(
         'foo = 1;',
         'test("test1", function() { assert.ok(foo); }); test("test2", function() {assert.equal(2, foo)})'
+      ).then(function(resp) {
+        assert.equal(false, resp.solved);
+        done();
+      }).catch(done);
+    });
+
+    it('should timeout', function(done) {
+      runner.testSolution(
+        '',
+        'test("test1", function() { return new Promise(function(_, fails) {setTimeout(fails, 1000)}) });',
+        {timeout: 500}
       ).then(function(resp) {
         assert.equal(false, resp.solved);
         done();

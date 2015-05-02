@@ -1,7 +1,9 @@
 'use strict';
 
+var path = require('path');
 var vm = require('vm');
 var assert = require('assert');
+var spawn = require('child_process').spawn;
 
 /**
  * Run tests in a sandbox.
@@ -17,19 +19,69 @@ var assert = require('assert');
  * @return Object          holding `solved` (bool), `results` and `errors`
  *
  */
-var testSolution = function(solution, tests) {
-  var ctx = {};
+var testSolution = function(solution, tests, opts) {
+  opts = opts || {};
 
-  try {
-    runSolution(solution, ctx);
-    initTests(tests, ctx);
-    return runTests(ctx);
-  } catch (e) {
-    return Promise.resolve({
-      solved: false,
-      errors: e.toString()
+  return new Promise(function(ok) {
+    var out = '';
+    var err = '';
+    var resolved = false;
+    var tester = spawn(process.execPath, [
+      path.join(__dirname, '_runner.js'),
+      '--solution', solution,
+      '--tests', tests
+    ]);
+
+    var timeout = setTimeout(function() {
+      tester.kill('SIGTERM');
+      timeout = null;
+
+      if (resolved) {
+        return;
+      }
+
+      resolved = true;
+      ok({solved: false, errors: 'timeout'});
+    }, opts.timeout || 5000);
+
+    tester.stdout.on('data', function(data) {
+      out += data;
     });
-  }
+
+    tester.stderr.on('data', function(data) {
+      err += data;
+    });
+
+    tester.on('close', function(code) {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+
+      if (resolved) {
+        return;
+      }
+
+      resolved = true;
+      if (code) {
+        ok({solved: false, errors: err});
+      } else {
+        ok(JSON.parse(out));
+      }
+    });
+
+    tester.on('error', function(e) {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+
+      if (resolved) {
+        return;
+      }
+
+      resolved = true;
+      ok({solved: false, errors: e.toString()});
+    });
+  });
 };
 
 /**
@@ -50,6 +102,14 @@ function runSolution(solution, ctx) {
   if (ctx == null) {
     ctx = {};
   }
+
+  ctx.setTimeout = function(fn, delay) {
+    if (typeof fn === 'function') {
+      return setTimeout(fn, delay);
+    }
+    throw new Error('setTimeout would normally support string to evaluated, but we only support function');
+  };
+  ctx.clearTimeout = clearTimeout;
 
   try {
     vm.runInNewContext(solution, ctx);

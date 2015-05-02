@@ -27,6 +27,9 @@ push-images: images
 run-image: images
 	${docker} run -ti --rm -p 5000:5000 ${repo-name}:${version} bash
 
+run-image-dev: images
+	${docker} run -ti --rm -p 5000:5000 -v ${cwd}:/app ${repo-name}:${version} bash
+
 test: images
 	${docker} run -ti --rm ${repo-name}:${version} npm test
 .PHONY: run-image test
