@@ -7,7 +7,8 @@ var testSolution = require('./runner.js').testSolution;
 var argv = require('minimist')(process.argv);
 var options = {
   port: argv.port || 5000,
-  host: argv.host || '0.0.0.0'
+  host: argv.host || '0.0.0.0',
+  root: argv.root || '/javascript'
 };
 
 var errJsonrequestRequired = 'jsonrequest is a required property.';
