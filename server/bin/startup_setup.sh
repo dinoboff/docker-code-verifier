@@ -4,6 +4,7 @@ SELENIUM_VERSION="2.44.0"
 
 SERVER_IMAGE="singpath/verifier-server"
 PYTHON_IMAGE="singpath/verifier-python3"
+JAVASCRIPT_IMAGE="singpath/verifier-javascript"
 ANGULARJS_IMAGE="singpath/verifier-angularjs"
 ANGULARJS_STATIC_IMAGE="singpath/verifier-angularjs-static"
 SELENIUM_IMAGE="selenium/hub"
@@ -28,6 +29,7 @@ if [[ -z "$CLUSTER_VERSION" ]]; then
     status_server "failed"
 else
 	sudo docker pull "$PYTHON_IMAGE":"$CLUSTER_VERSION"
+	sudo docker pull "$JAVASCRIPT_IMAGE":"$CLUSTER_VERSION"
 	sudo docker pull "$SERVER_IMAGE":"$CLUSTER_VERSION"
 	sudo docker pull "$ANGULARJS_IMAGE":"$CLUSTER_VERSION"
 	sudo docker pull "$ANGULARJS_STATIC_IMAGE":"$CLUSTER_VERSION"

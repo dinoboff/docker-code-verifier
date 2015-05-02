@@ -38,6 +38,10 @@
                 </li>
 
                 <li>
+                    <a href="" ng-click="ctrl.setVerifier('javascript')">JavaScript</a>
+                </li>
+
+                <li>
                     <a href="" ng-click="ctrl.setVerifier('python3')">Python 3</a>
                 </li>
             </ul>
@@ -95,6 +99,14 @@
                         payload: {
                             solution: 'foo = 1',
                             tests: '>>> foo\n1'
+                        }
+                    },
+                    javascript: {
+                        name: 'JavaScript',
+                        endpoint: '/javascript',
+                        payload: {
+                            solution: 'foo = 1',
+                            tests: 'test("test1", function() {\n  assert.equal(1, foo);\n})'
                         }
                     },
                     angularjs: {
