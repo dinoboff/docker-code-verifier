@@ -1,0 +1,22 @@
+{
+  "name": "javascript-verifier",
+  "version": "0.5.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha",
+    "lint": "./node_modules/.bin/eslint . && ./node_modules/.bin/jscs ."
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^0.20.0",
+    "jscs": "^1.13.1",
+    "mocha": "^2.2.4"
+  },
+  "dependencies": {
+    "body-parser": "^1.12.3",
+    "express": "^4.12.3",
+    "minimist": "^1.1.1"
+  }
+}
