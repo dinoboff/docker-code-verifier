@@ -14,7 +14,7 @@ vm-zone="us-central1-a"
 .images/${repo-name}.${tag}: .images/${repo-name}.${version}
 	mkdir -p .images/singpath
 	${docker} rmi ${repo-name}:${tag} > /dev/null 2>&1 || echo "latest tag not set yet."
-	${docker} tag ${repo-name}:${version} ${repo-name}:${tag}
+	${docker} tag -f ${repo-name}:${version} ${repo-name}:${tag}
 	touch $@
 
 .images/${repo-name}.${version}: Dockerfile nginx.conf www/**/*
