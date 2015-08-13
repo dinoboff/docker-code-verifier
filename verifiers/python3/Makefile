@@ -12,7 +12,7 @@ docker ?= docker
 	${docker} tag -f ${repo-name}:${version} ${repo-name}:${tag}
 	touch $@
 
-.images/${repo-name}.${version}: Dockerfile server.py codeverifier/**/*
+.images/${repo-name}.${version}: Dockerfile server.py codeverifier/**/* codeverifier/*
 	mkdir -p .images/singpath
 	${docker} build --rm=true -t ${repo-name}:${version} .
 	touch $@
@@ -28,5 +28,5 @@ run-image:
 	${docker} run -ti --rm -p 5000:5000 -v ${cwd}:/app ${repo-name}:${version}
 
 test:
-	${docker} run -ti --rm -v ${cwd}:/app ${repo-name}:${version} python3 -m unittest discover -s codeverifier/
+	${docker} run -ti --rm -w /app -v ${cwd}:/app ${repo-name}:${version} python3 -m unittest discover -s codeverifier/
 .PHONY: run-image test
