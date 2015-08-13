@@ -56,7 +56,7 @@ class TestRunner(object):
 
         return (
             self.results is not None
-            and all(r['correct'] for r in self.results if r is not None)
+            and all(r['correct'] for r in self.results if 'correct' in r)
         )
 
     def __init__(self, solution, tests):
@@ -66,10 +66,8 @@ class TestRunner(object):
         self.errors = None
         self.printed = None
         self._globals = {}
-        self._locals = {}
-        # init _globals and _locals
-        compiled = compile('', self.FILENAME, self.MODE)
-        exec(compiled, self._globals, self._locals)
+        # init _globals
+        self._exec('')
 
     def run(self):
         patcher = StandardStreams()
@@ -97,8 +95,8 @@ class TestRunner(object):
 
     def _run_solution(self):
         self._exec(self.solution)
-        self._locals['YOUR_SOLUTION'] = self.solution
-        self._locals['LINES_IN_YOUR_SOLUTION'] = len(
+        self._globals['YOUR_SOLUTION'] = self.solution
+        self._globals['LINES_IN_YOUR_SOLUTION'] = len(
             self.solution.splitlines()
         )
 
@@ -110,11 +108,11 @@ class TestRunner(object):
         """See https://docs.python.org/3.4/library/doctest.html#doctest.Example
 
         """
-        if not example.want:
-            self._exec(example.source)
-            return
-
         call = example.source.strip()
+        if not example.want:
+            self._exec(call)
+            return {'call': call}
+
         expected = self._eval(example.want)
         got = self._eval(call)
         return {
@@ -126,7 +124,7 @@ class TestRunner(object):
 
     def _exec(self, source):
         compiled = compile(source, self.FILENAME, self.MODE)
-        exec(compiled, self._globals, self._locals)
+        exec(compiled, self._globals)
 
     def _eval(self, source):
-        return eval(source, self._globals, self._locals)
+        return eval(source, self._globals)
