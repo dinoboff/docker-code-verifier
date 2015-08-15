@@ -4,6 +4,9 @@ import argparse
 import base64
 import json
 import logging
+import os
+import subprocess
+import sys
 
 from flask import Flask, request, make_response
 
@@ -12,6 +15,12 @@ from codeverifier import TestRunner
 
 JSON_TYPE = "application/json"
 JS_TYPE = "application/javascript"
+TIMEOUT = 5
+RUNNER_SCRIPT = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    'runner.py'
+)
+
 
 ERR_JSONREQUEST_REQUIRED = "jsonrequest is a required property."
 ERR_JSONREQUEST_REQUIRED_BASE64 = (
@@ -43,6 +52,33 @@ parser.add_argument(
 parser.add_argument(
     "--port", type=int, default=5000, help="port to bind the server too"
 )
+
+
+def spawn(solution, tests=None):
+    if tests is None:
+        args = [sys.executable, RUNNER_SCRIPT, solution]
+    else:
+        args = [sys.executable, RUNNER_SCRIPT, solution, tests]
+
+    proc = subprocess.Popen(
+        args,
+        stdout=subprocess.PIPE,
+        universal_newlines=True,
+    )
+
+    try:
+        out, _ = proc.communicate(timeout=TIMEOUT)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        return {
+            'solved': False,
+            'errors': 'timeout'
+        }
+
+    if proc.returncode != 0:
+        raise Exception('Failed to run tests.')
+
+    return json.loads(out)
 
 
 def response(code=CODE_OK, cb=None, **ctx):
@@ -82,9 +118,8 @@ def verifiy_get():
             errors=ERR_SOLUTION_REQUIRED
         )
 
-    runner = TestRunner(solution, req.get("tests"))
-    runner.run()
-    return response(cb=request.args.get("vcallback"), **runner.to_dict())
+    resp = spawn(solution, req.get("tests"))
+    return response(**resp)
 
 
 @app.route("/python", methods=["POST"])
@@ -115,9 +150,8 @@ def verifiy_post():
             code=CODE_BAD_REQUEST, errors=ERR_SOLUTION_REQUIRED
         )
 
-    runner = TestRunner(solution, req.get("tests"))
-    runner.run()
-    return response(**runner.to_dict())
+    resp = spawn(solution, req.get("tests"))
+    return response(**resp)
 
 
 if __name__ == "__main__":
