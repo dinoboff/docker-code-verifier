@@ -93,17 +93,17 @@ To setup a cluster that Singpath can start:
 
 3. Setup the cluster:
    ```
-   .scripts/deploy.sh setup
+   ./scripts/deploy.sh setup
    ```
 
 4. Try the new cluster:
    ```
-   .scripts/deploy.sh start
+   ./scripts/deploy.sh start
    ```
 
 5. Stop the cluster:
    ```
-   .scripts/deploy.sh stop
+   ./scripts/deploy.sh stop
    ```
 
 An instance template and a network load balancer should now be ready. You just to
