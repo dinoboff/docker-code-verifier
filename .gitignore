@@ -52,6 +52,3 @@ docs/_build/
 
 # PyBuilder
 target/
-
-
-verifiers/angularjs/node_modules/
