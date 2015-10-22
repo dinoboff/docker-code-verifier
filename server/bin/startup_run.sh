@@ -6,6 +6,7 @@ IPTABLES=${IPTABLES:="sudo iptables"}
 SELENIUM_VERSION="2.44.0"
 
 SERVER_IMAGE="singpath/verifier-server"
+JAVA_IMAGE="singpath/verifier-java"
 PYTHON_IMAGE="singpath/verifier-python3"
 JAVASCRIPT_IMAGE="singpath/verifier-javascript"
 ANGULARJS_IMAGE="singpath/verifier-angularjs"
@@ -14,6 +15,7 @@ SELENIUM_IMAGE="selenium/hub"
 SELENIUM_PHANTOMJS_IMAGE="singpath/verifier-angularjs-phantomjs"
 
 SERVER_CONTAINER="server"
+JAVA_CONTAINER="java"
 PYTHON_CONTAINER="python"
 JAVASCRIPT_CONTAINER="javascript"
 ANGULARJS_CONTAINER="angularjs"
@@ -52,6 +54,7 @@ fi
 
 
 # start verifier containers
+$DOCKER run -d --name "$JAVA_CONTAINER" --restart="always"  "$JAVA_IMAGE":"$CLUSTER_VERSION"
 $DOCKER run -d --name "$PYTHON_CONTAINER" --restart="always"  "$PYTHON_IMAGE":"$CLUSTER_VERSION"
 $DOCKER run -d --name "$JAVASCRIPT_CONTAINER" --restart="always"  "$JAVASCRIPT_IMAGE":"$CLUSTER_VERSION"
 $DOCKER run -d --name "$ANGULARJS_STATIC_CONTAINER" --restart="always" -v /www/_protractor "$ANGULARJS_STATIC_IMAGE":"$CLUSTER_VERSION"
@@ -62,6 +65,7 @@ $DOCKER run -d --name "$ANGULARJS_CONTAINER" --restart="always" --link "$SELENIU
 
 # start the nginx proxy
 $DOCKER run -d --name "$SERVER_CONTAINER" -p 80:80 --restart="always" \
+	--link "$JAVA_CONTAINER":java \
 	--link "$PYTHON_CONTAINER":python \
 	--link "$JAVASCRIPT_CONTAINER":javascript \
 	--link "$ANGULARJS_CONTAINER":angularjs \

@@ -31,12 +31,14 @@ push-images: images
 run-image: images
 	${docker} rm -f $(${docker} ps -aq) > /dev/null 2>&1 || echo "no container running."
 	cd ../verifiers/angularjs; make images version=${version} tag=${tag}
+	cd ../verifiers/java; make images version=${version} tag=${tag}
 	cd ../verifiers/python3; make images version=${version} tag=${tag}
 	cd ../verifiers/javascript; make images version=${version} tag=${tag}
 	CLUSTER_VERSION=${version} SKIP_CLUSTER_IPTABLE_CONFIGURATION=true DOCKER="docker" ./bin/startup_run.sh
 .PHONY: images push-images run-image
 
 push-deploy-images: push-images
+	cd ../verifiers/java; make push-images version=${version} tag=${tag}
 	cd ../verifiers/python3; make push-images version=${version} tag=${tag}
 	cd ../verifiers/javascript; make push-images version=${version} tag=${tag}
 	cd ../verifiers/angularjs; make push-images version=${version} tag=${tag}

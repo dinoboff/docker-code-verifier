@@ -44,6 +44,10 @@
                 <li>
                     <a href="" ng-click="ctrl.setVerifier('python3')">Python 3</a>
                 </li>
+
+                <li>
+                    <a href="" ng-click="ctrl.setVerifier('java')">Java</a>
+                </li>
             </ul>
         </md-content>
 
@@ -93,6 +97,14 @@
             .controller('Verifier', function($http) {
                 var self = this;
                 var verifiers = {
+                    java: {
+                        name: 'Java',
+                        endpoint: '/java',
+                        payload: {
+                            solution: 'int foo = 1',
+                            tests: 'assertEquals(1, foo)'
+                        }
+                    },
                     python3: {
                         name: 'Python 3',
                         endpoint: '/python3',
