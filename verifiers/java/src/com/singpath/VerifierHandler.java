@@ -1,5 +1,6 @@
 package com.singpath;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import net.minidev.json.JSONObject;
@@ -21,6 +22,9 @@ public class VerifierHandler implements HttpHandler {
         Response resp = this.processReq(t);
         String json = resp.toString();
 
+        Headers headers = t.getResponseHeaders();
+        headers.add("Content-Type", "application/json");
+        headers.add("Access-Control-Allow-Origin", "*");
         t.sendResponseHeaders(200, json.length());
         OutputStream os = t.getResponseBody();
         os.write(json.getBytes());
