@@ -105,9 +105,10 @@ function template_exist() {
 
 function create_autoscaler() {
     gcloud compute instance-groups managed set-autoscaling \
-    	$1
-		--min-num-replicas "$2" \
-		--max-num-replicas "$3" \
+    	$1 \
+        --zone "$2"
+		--min-num-replicas "$3" \
+		--max-num-replicas "$4" \
 	    --target-cpu-utilization 0.75 \
 	    --cool-down-period 180
 }
@@ -131,7 +132,7 @@ function create_forwardrule() {
 function create_group() {
     group_exist $1 $2
     if [[ $? -ne 0 ]]; then
-        gcloud compute instance-groups managed create \
+        echo gcloud compute instance-groups managed create \
         	 "$1" \
             --zone "$2" \
             --base-instance-name "$3" \
@@ -307,7 +308,7 @@ function start_cluster() {
 
     ### Autoscaler
     echo -e "\n\nCreating autoscaler..."
-    create_autoscaler "$INSTANCE_GROUP_NAME" "$CLUSTER_NODE_MIN_COUNT" "$CLUSTER_NODE_MAX_COUNT"
+    create_autoscaler "$INSTANCE_GROUP_NAME" "$ZONE" "$CLUSTER_NODE_MIN_COUNT" "$CLUSTER_NODE_MAX_COUNT"
 
     cluster_ip=$(gcloud compute forwarding-rules list codeverifier-rule --regions us-central1 | cat -n | awk '$1>1{print $4}')
     echo "Test the cluster at http://${cluster_ip}/console/"
@@ -316,7 +317,7 @@ function start_cluster() {
 
 
 function stop_cluster() {
-    gcloud compute instance-groups managed --zone "$ZONE" delete "$INSTANCE_GROUP_NAME"
+    gcloud compute instance-groups managed delete --zone "$ZONE" "$INSTANCE_GROUP_NAME"
 }
 
 
