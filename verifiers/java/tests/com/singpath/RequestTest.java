@@ -2,29 +2,34 @@ package com.singpath;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 public class RequestTest {
 
     @Test
-    public void testGetSolution() throws Exception {
-        Request req = new Request("solution", "test");
-        assertEquals("solution", req.getSolution());
-    }
-
-    @Test
-    public void testGetTests() throws Exception {
-        Request req = new Request("solution", "test1\ntest2");
-        String[] tests = req.getTests();
-        assertEquals(2, tests.length);
-        assertEquals("test1", tests[0]);
-        assertEquals("test2", tests[1]);
+    public void testIsInValid() throws Exception {
+        Request req = new Request("", "");
+        assertFalse(req.isValid());
     }
 
     @Test
     public void testIsValid() throws Exception {
-        Request req = new Request("", "");
-        assertFalse(req.isValid());
+        Request req = new Request("foo", "bar");
+        assertTrue(req.isValid());
     }
+
+//    @Test
+//    public void testCompile() throws Exception {
+//        Request req = new Request(
+//                "\n" +
+//                        "public class SingPath {\n" +
+//                        "    public int two = 2;\n" +
+//                        "}",
+//                "SingPath s = new SingPath();\n" +
+//                        "assertEquals(2, s.two);"
+//        );
+//        assertTrue(req.compile(null));
+//    }
 }

@@ -1,4 +1,4 @@
-package com.singpath;
+package com.singpath.server;
 
 import com.sun.net.httpserver.HttpServer;
 import org.apache.logging.log4j.LogManager;
@@ -8,7 +8,7 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Server implements Runnable, ShutDown {
+public class Main implements Runnable, ShutDown {
 
     private final static int PORT = Integer.getInteger("com.singpath.server.port", 5000);
     private final static String CONTEXT = System.getProperty("com.singpath.server.java.context", "/java");
@@ -19,7 +19,7 @@ public class Server implements Runnable, ShutDown {
     private HttpServer server;
 
     public static void main(String[] args) throws Exception {
-        Server s = new Server();
+        Main s = new Main();
         Thread t = new Thread(s);
 
         t.start();

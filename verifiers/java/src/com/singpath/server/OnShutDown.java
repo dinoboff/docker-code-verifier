@@ -1,4 +1,4 @@
-package com.singpath;
+package com.singpath.server;
 
 
 public class OnShutDown implements Runnable {

@@ -3,6 +3,8 @@ package com.singpath;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONStyle;
+import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
@@ -13,15 +15,23 @@ public class Response {
     private String errors;
     private Boolean solved;
     private JSONArray results;
-    private ByteArrayOutputStream out;
+    private String printed;
+    private int runCount = -1;
+    private long runTime = -1;
 
     public Response() {
         this(true);
     }
 
-    public Response(ByteArrayOutputStream out) {
-        this(true);
-        this.setOutputStream(out);
+    public Response(Result result) {
+        this(result.wasSuccessful());
+
+        for (Failure f : result.getFailures()) {
+            this.addResult(f.toString());
+        }
+
+        this.runCount = result.getRunCount();
+        this.runTime = result.getRunTime();
     }
 
     public Response(boolean solved) {
@@ -32,6 +42,10 @@ public class Response {
         this.setErrors(errors);
     }
 
+    public void setPrinted(ByteArrayOutputStream out) {
+        this.printed = new String(out.toByteArray(), Charset.forName("UTF-8"));
+    }
+
     public void addResult(String call) {
         if (this.results == null) {
             this.results = new JSONArray();
@@ -39,35 +53,8 @@ public class Response {
 
         JSONObject result = new JSONObject();
         result.put("call", call);
-        result.put("correct", true);
-        this.results.add(result);
-    }
-
-    public void addResult(String call, String msg) {
-        if (this.results == null) {
-            this.results = new JSONArray();
-        }
-
-        JSONObject result = new JSONObject();
-        result.put("call", call);
         result.put("correct", false);
-        result.put("error", msg);
         this.results.add(result);
-        this.setSolved(false);
-    }
-
-    public void addResult(String call, Object expected, Object received) {
-        if (this.results == null) {
-            this.results = new JSONArray();
-        }
-
-        JSONObject result = new JSONObject();
-        result.put("call", call);
-        result.put("correct", false);
-        result.put("expected", expected);
-        result.put("received", received);
-        this.results.add(result);
-        this.setSolved(false);
     }
 
     public void setSolved(Boolean solved) {
@@ -79,23 +66,12 @@ public class Response {
         this.errors = errors;
     }
 
-    public void setOutputStream(ByteArrayOutputStream out) {
-        this.out = out;
-    }
-
-    public String getOutput() {
-        if (this.out == null) {
-            return "";
-        }
-
-        return new String(this.out.toByteArray(), Charset.forName("UTF-8"));
-    }
-
     @Override
     public String toString() {
         JSONObject json = new JSONObject();
 
         json.put("solved", this.solved);
+
         if (this.errors != null) {
             json.put("errors", this.errors);
         }
@@ -104,9 +80,16 @@ public class Response {
             json.put("results", this.results);
         }
 
-        String out = this.getOutput();
-        if (out.length() > 0) {
-            json.put("printed", out);
+        if (this.runTime != -1) {
+            json.put("runTime", this.runTime);
+        }
+
+        if (this.runCount != -1) {
+            json.put("runTime", this.runCount);
+        }
+
+        if (this.printed != null && this.printed.length() > 0) {
+            json.put("printed", this.printed);
         }
 
         return json.toString(JSONStyle.NO_COMPRESS);

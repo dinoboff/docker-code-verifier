@@ -1,6 +1,5 @@
 package com.singpath;
 
-import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import net.minidev.json.JSONValue;
 import org.junit.Test;
@@ -8,60 +7,10 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class ResponseTest {
-
-    @Test
-    public void testAddResultPass() throws Exception {
-        Response resp = new Response();
-        resp.addResult("assertTrue(true)");
-
-        JSONObject dict = (JSONObject) JSONValue.parse(resp.toString());
-        JSONArray results = (JSONArray) dict.get("results");
-
-        assertEquals(1, results.size());
-
-        JSONObject firstTest = (JSONObject) results.get(0);
-        assertEquals("assertTrue(true)", firstTest.get("call"));
-        assertEquals(true, firstTest.get("correct"));
-    }
-
-    @Test
-    public void testAddResultFailed() throws Exception {
-        Response resp = new Response();
-        resp.addResult("assertTrue(true)");
-        resp.addResult("assertTrue(false)", true, false);
-
-        JSONObject dict = (JSONObject) JSONValue.parse(resp.toString());
-        JSONArray results = (JSONArray) dict.get("results");
-
-        assertEquals(2, results.size());
-
-        JSONObject firstTest = (JSONObject) results.get(1);
-        assertEquals("assertTrue(false)", firstTest.get("call"));
-        assertEquals(false, firstTest.get("correct"));
-        assertEquals(true, firstTest.get("expected"));
-        assertEquals(false, firstTest.get("received"));
-    }
-
-    @Test
-    public void testAddResultFailedJustMsg() throws Exception {
-        Response resp = new Response();
-        resp.addResult("assertTrue(true)");
-        resp.addResult("assertTrue(false)", true, false);
-        resp.addResult("assertSomething(foo)", "some message I can't parse");
-
-        JSONObject dict = (JSONObject) JSONValue.parse(resp.toString());
-        JSONArray results = (JSONArray) dict.get("results");
-
-        assertEquals(3, results.size());
-
-        JSONObject firstTest = (JSONObject) results.get(2);
-        assertEquals("assertSomething(foo)", firstTest.get("call"));
-        assertEquals(false, firstTest.get("correct"));
-        assertEquals("some message I can't parse", firstTest.get("error"));
-    }
 
     @Test
     public void testSetSolvedFalse() throws Exception {
@@ -109,9 +58,9 @@ public class ResponseTest {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PrintStream s = new PrintStream(out);
-        resp.setOutputStream(out);
-
         s.print("some output");
+
+        resp.setPrinted(out);
 
         JSONObject dict = (JSONObject) JSONValue.parse(resp.toString());
         String printed = (String) dict.get("printed");

@@ -1,5 +1,8 @@
-package com.singpath;
+package com.singpath.server;
 
+import com.singpath.Request;
+import com.singpath.Response;
+import com.singpath.Verifier;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
