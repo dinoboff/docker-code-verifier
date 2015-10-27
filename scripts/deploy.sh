@@ -106,7 +106,7 @@ function template_exist() {
 function create_autoscaler() {
     gcloud compute instance-groups managed set-autoscaling \
     	$1 \
-        --zone "$2"
+        --zone "$2"\
 		--min-num-replicas "$3" \
 		--max-num-replicas "$4" \
 	    --target-cpu-utilization 0.75 \
@@ -132,7 +132,7 @@ function create_forwardrule() {
 function create_group() {
     group_exist $1 $2
     if [[ $? -ne 0 ]]; then
-        echo gcloud compute instance-groups managed create \
+        gcloud compute instance-groups managed create \
         	 "$1" \
             --zone "$2" \
             --base-instance-name "$3" \
@@ -214,16 +214,15 @@ function check_image_builder_instance_status() {
 
     echo "Image builder instance IP:" $ip
     
-    status=$(curl http://${ip}/status.txt)
-    status_fetched=$?
-    while [[ $status_fetched -ne 0 ]]; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" http://${ip}/status.txt)
+    while [[ $code -ne 200 ]]; do
         echo "Failed to fetch image builder instance status..."
         echo "will try again in 30s"
         sleep 30
-        status=$(curl http://${ip}/status.txt)
-        status_fetched=$?
+        code=$(curl -s -o /dev/null -w "%{http_code}" http://${ip}/status.txt)
     done
 
+    status=$(curl http://${ip}/status.txt)
     if [[ "$status" == "done" ]]; then
         echo "Image builder instance is ready."
     elif [[ "$status" == "failed" ]]; then
